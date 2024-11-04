@@ -1,6 +1,6 @@
 ![Logo: Violet Crystal](https://raw.githubusercontent.com/NaKeRNarolino/violet_crystal/master/public/violet_crystal_logo_1024.png?token=GHSAT0AAAAAACK6OTIUPZXP6HHH6QW22W42ZPHEN2A)
 
-# Violet Crystal is a Rust framework for rust-powered MCBE addon development (Paused)
+# Violet Crystal is a Rust framework for rust-powered MCBE addon development (Deprecated)
 
 ### Available features:
 - Pack generation
