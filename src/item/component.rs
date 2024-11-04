@@ -1,6 +1,8 @@
+use std::sync::Arc;
 use askama::Template;
+use crate::vio::Buildable;
 
-pub trait ItemComponent {
+pub trait ItemComponent : Buildable {
     fn serialize(&self) -> String;
 }
 
@@ -16,10 +18,13 @@ struct ItemDamageComponentTemplate {
 pub struct ItemDamageComponent {
     pub value: i32,
 }
+
+impl Buildable for ItemDamageComponent {}
+
 impl ItemComponent for ItemDamageComponent {
     fn serialize(&self) -> String {
         let value = self.value;
-        let val = ItemDamageComponentTemplate { value: value }
+        let val = ItemDamageComponentTemplate { value }
             .render()
             .unwrap();
         val
@@ -38,10 +43,13 @@ struct ItemDisplayNameComponentTemplate<'a> {
 pub struct ItemDisplayNameComponent<'a> {
     pub value: &'a str,
 }
+
+impl<'a> Buildable for ItemDisplayNameComponent<'a> {}
+
 impl<'a> ItemComponent for ItemDisplayNameComponent<'a> {
     fn serialize(&self) -> String {
         let value = self.value;
-        let val: String = ItemDisplayNameComponentTemplate { value: value }
+        let val: String = ItemDisplayNameComponentTemplate { value }
             .render()
             .unwrap();
         val
@@ -60,6 +68,9 @@ struct ItemIconComponentTemplate<'a> {
 pub struct ItemIconComponent<'a> {
     pub texture: &'a str,
 }
+
+impl<'a> Buildable for ItemIconComponent<'a> {}
+
 impl<'a> ItemComponent for ItemIconComponent<'a> {
     fn serialize(&self) -> String {
         let value = self.texture;
@@ -82,6 +93,9 @@ struct ItemFuelComponentTemplate {
 pub struct ItemFuelComponent {
     pub duration: i32,
 }
+
+impl Buildable for ItemFuelComponent {}
+
 impl ItemComponent for ItemFuelComponent {
     fn serialize(&self) -> String {
         let value = self.duration;
@@ -104,10 +118,13 @@ struct ItemHandEquippedComponentTemplate {
 pub struct ItemHandEquippedComponent {
     pub value: bool,
 }
+
+impl Buildable for ItemHandEquippedComponent {}
+
 impl ItemComponent for ItemHandEquippedComponent {
     fn serialize(&self) -> String {
         let value = self.value;
-        let val: String = ItemHandEquippedComponentTemplate { value: value }
+        let val: String = ItemHandEquippedComponentTemplate { value }
             .render()
             .unwrap();
         val
@@ -126,10 +143,13 @@ struct ItemAllowOffHandComponentTemplate {
 pub struct ItemAllowOffHandComponent {
     pub value: bool,
 }
+
+impl Buildable for ItemAllowOffHandComponent {}
+
 impl ItemComponent for ItemAllowOffHandComponent {
     fn serialize(&self) -> String {
         let value = self.value;
-        let val: String = ItemAllowOffHandComponentTemplate { value: value }
+        let val: String = ItemAllowOffHandComponentTemplate { value }
             .render()
             .unwrap();
         val
@@ -148,10 +168,13 @@ struct ItemMaxStackValueComponentTemplate {
 pub struct ItemMaxStackValueComponent {
     pub value: bool,
 }
+
+impl Buildable for ItemMaxStackValueComponent {}
+
 impl ItemComponent for ItemMaxStackValueComponent {
     fn serialize(&self) -> String {
         let value = self.value;
-        let val: String = ItemMaxStackValueComponentTemplate { value: value }
+        let val: String = ItemMaxStackValueComponentTemplate { value }
             .render()
             .unwrap();
         val
@@ -174,6 +197,9 @@ pub struct ItemDurabilityComponent {
     max_chance: i32,
     durability: i32,
 }
+
+impl Buildable for ItemDurabilityComponent {}
+
 impl ItemComponent for ItemDurabilityComponent {
     fn serialize(&self) -> String {
         let value = self.durability;
@@ -202,6 +228,9 @@ struct ItemArmorComponentTemplate {
 pub struct ItemArmorComponent {
     pub protection: i32,
 }
+
+impl Buildable for ItemArmorComponent {}
+
 impl ItemComponent for ItemArmorComponent {
     fn serialize(&self) -> String {
         let value = self.protection;
@@ -224,6 +253,9 @@ struct ItemRenderOffsetsComponentTemplate<'a> {
 pub struct ItemRenderOffsetsComponent<'a> {
     pub value: &'a str,
 }
+
+impl<'a> Buildable for ItemRenderOffsetsComponent<'a> {}
+
 impl<'a> ItemComponent for ItemRenderOffsetsComponent<'a> {
     fn serialize(&self) -> String {
         let value = self.value;
@@ -246,6 +278,9 @@ struct ItemCreativeCategoryComponentTemplate<'a> {
 pub struct ItemCreativeCategoryComponent<'a> {
     pub parent: &'a str,
 }
+
+impl<'a> Buildable for ItemCreativeCategoryComponent<'a> {}
+
 impl<'a> ItemComponent for ItemCreativeCategoryComponent<'a> {
     fn serialize(&self) -> String {
         let parent = self.parent;
@@ -302,6 +337,9 @@ struct ItemRepairableComponentTemplate {
 pub struct ItemRepairableComponent<'a> {
     pub repair_entries: Vec<ItemRepairEntry<'a>>,
 }
+
+impl<'a> Buildable for ItemRepairableComponent<'a> {}
+
 impl<'a> ItemComponent for ItemRepairableComponent<'a> {
     fn serialize(&self) -> String {
         let repair_entries = &self.repair_entries;
@@ -328,6 +366,8 @@ pub struct ItemCustomComponentsTemplate {
 pub struct ItemCustomComponents<'a> {
     pub components: Vec<&'a str>,
 }
+
+impl<'a> Buildable for ItemCustomComponents<'a> {}
 
 impl<'a> ItemComponent for ItemCustomComponents<'a> {
     fn serialize(&self) -> String {

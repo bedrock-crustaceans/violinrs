@@ -6,7 +6,7 @@ license = "MIT OR Apache-2.0"
 description = "Rust-powered addon development framework for Minecraft Bedrock"
 repository = "https://github.com/NaKeRNarolino/violet_crystal"
 exclude = ["./violet_crystal_results"]
-publish = true
+publish = false
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]

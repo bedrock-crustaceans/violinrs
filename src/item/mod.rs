@@ -1,4 +1,4 @@
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 use askama::Template;
 use crate::vio::Identifier;
@@ -9,7 +9,7 @@ pub mod item_registry;
 #[derive(Clone)]
 pub struct Item<'a> {
     pub type_id: Identifier<'a>,
-    pub components: Vec<&'a dyn component::ItemComponent>,
+    pub components: Vec<Arc<dyn component::ItemComponent>>,
 }
 impl<'a> Item<'a> {
     pub fn serialize(&self) -> String {

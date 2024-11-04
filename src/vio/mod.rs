@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 #[derive(Clone, Copy)]
 pub struct Vec3 {
     pub x: f64,
@@ -20,4 +22,10 @@ impl Identifier<'_> {
 pub struct Pair<T, K> {
     pub first: T,
     pub second: K
+}
+
+pub trait Buildable {
+    fn build(&self) -> Arc<Self> {
+        Arc::new(self.clone())
+    }
 }

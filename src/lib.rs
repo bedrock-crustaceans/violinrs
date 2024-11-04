@@ -25,7 +25,7 @@ mod tests {
     use crate::block::permutation::BlockPermutation;
     use crate::block::state::BoolBlockState;
     use crate::item::item_registry::ItemAtlasEntry;
-    use crate::vio::{Identifier, Pair, Vec3};
+    use crate::vio::{Buildable, Identifier, Pair, Vec3};
 
     #[test]
     fn main() {
@@ -66,14 +66,14 @@ mod tests {
                 value: "test"
             },
             components: vec![
-                &ItemDamageComponent { value: 3 },
-                &ItemDisplayNameComponent { value: "Test" },
-                &ItemIconComponent {
+                ItemDamageComponent { value: 3 }.build(),
+                ItemDisplayNameComponent { value: "Test" }.build(),
+                ItemIconComponent {
                     texture: "test_test",
-                },
-                &ItemFuelComponent { duration: 10 },
-                &item_repairable,
-                &ItemAllowOffHandComponent { value: true },
+                }.build(),
+                ItemFuelComponent { duration: 10 }.build(),
+                item_repairable.build(),
+                ItemAllowOffHandComponent { value: true }.build(),
             ],
         });
 
