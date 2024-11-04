@@ -1,6 +1,6 @@
-![Logo: Violet Crystal](https://raw.githubusercontent.com/NaKeRNarolino/violet_crystal/master/public/violet_crystal_logo_1024.png?token=GHSAT0AAAAAACK6OTIUPZXP6HHH6QW22W42ZPHEN2A)
+![Logo: Violin.rs](https://github.com/NaKeRNarolino/violin_rs/blob/master/public/violin_rs.png?raw=true)
 
-# Violet Crystal is a Rust framework for rust-powered MCBE addon development (Deprecated)
+# Violin.rs is a Rust framework for rust-powered MCBE addon development (Previously known as Violet Crystal)
 
 ### Available features:
 - Pack generation
