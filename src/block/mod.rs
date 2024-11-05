@@ -1,9 +1,9 @@
-use std::sync::Mutex;
-use askama::Template;
+use self::component::BlockComponent;
 use crate::block::permutation::BlockPermutation;
 use crate::block::state::BlockState;
 use crate::vio::Identifier;
-use self::component::BlockComponent;
+use askama::Template;
+use std::sync::Mutex;
 
 pub mod block_registry;
 pub mod component;
@@ -13,7 +13,7 @@ pub mod state;
 
 #[derive(Clone)]
 pub struct Block<'a> {
-    pub type_id: Identifier<'a>,
+    pub type_id: Identifier,
     pub components: Vec<&'a dyn BlockComponent>,
     pub permutations: Vec<BlockPermutation<'a>>,
     pub states: Vec<&'a dyn BlockState>,
@@ -51,7 +51,6 @@ impl<'a> Block<'a> {
         }
         states.pop();
 
-
         BlockTemplate {
             type_id: self.clone().type_id.render(),
             components: components_strings.join("\n"),
@@ -59,16 +58,13 @@ impl<'a> Block<'a> {
             states,
             permutations,
         }
-            .render()
-            .unwrap()
+        .render()
+        .unwrap()
     }
 }
 
 #[derive(Template)]
-#[template(
-    path = "block_serialization/block.json.jinja2",
-    escape = "none"
-)]
+#[template(path = "block_serialization/block.json.jinja2", escape = "none")]
 struct BlockTemplate {
     type_id: String,
     components: String,

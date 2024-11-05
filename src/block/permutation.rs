@@ -1,11 +1,11 @@
-use std::sync::Mutex;
-use askama::Template;
 use crate::block::component::BlockComponent;
+use askama::Template;
+use std::sync::Mutex;
 
 #[derive(Clone)]
 pub struct BlockPermutation<'a> {
     pub(crate) condition: &'a str,
-    pub(crate) components: Vec<&'a dyn BlockComponent>
+    pub(crate) components: Vec<&'a dyn BlockComponent>,
 }
 
 #[derive(Template)]
@@ -33,7 +33,9 @@ impl BlockPermutation<'_> {
         let final_components = components_strings.join("\n").to_string();
         BlockPermutationTemplate {
             condition: self.condition.to_string(),
-            components: final_components
-        }.render().unwrap()
+            components: final_components,
+        }
+        .render()
+        .unwrap()
     }
 }

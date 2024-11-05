@@ -1,27 +1,23 @@
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
+use crate::vio::{Identifier, SemVer};
 use askama::Template;
-use crate::vio::Identifier;
 
 pub mod component;
 pub mod item_registry;
 
 #[derive(Clone)]
-pub struct Item<'a> {
-    pub type_id: Identifier<'a>,
-    pub components: Vec<Arc<dyn component::ItemComponent>>,
+pub struct Item {
+    type_id: Identifier,
+    format_version: SemVer,
+    components: Vec<Arc<dyn component::ItemComponent>>,
 }
-impl<'a> Item<'a> {
+impl Item {
     pub fn serialize(&self) -> String {
         let components = self.components.clone();
         let mut components_strings: Vec<String> = vec![];
         for component in components {
-            let comp = Mutex::new(component);
-            let ser = comp.lock();
-            let mut fser = match ser {
-                Ok(guard) => guard.serialize(),
-                Err(_) => "Error serializing".to_string(),
-            };
+            let mut fser = component.serialize();
             fser.push(',');
             components_strings.push(fser);
         }
@@ -29,9 +25,50 @@ impl<'a> Item<'a> {
         ItemTemplate {
             id: &self.type_id.render(),
             components: components_strings,
+            format_version: self.format_version.render()
         }
         .render()
         .unwrap()
+    }
+
+    pub fn new(type_id: Identifier) -> Self {
+        Item {
+            type_id,
+            components: vec![],
+            format_version: SemVer::new(1, 21, 0)
+        }
+    }
+
+    pub fn with_component(&mut self, component: Arc<dyn component::ItemComponent>) -> Self {
+        self.components.push(component);
+
+        self.clone()
+    }
+
+    pub fn with_components(&mut self, components: Vec<Arc<dyn component::ItemComponent>>) -> Self {
+        self.components = components;
+
+        self.clone()
+    }
+
+    pub fn type_id(&self) -> Identifier {
+        self.type_id.clone()
+    }
+
+    pub fn using_type_id(&self, type_id: Identifier) -> Self {
+        let mut cloned_self = self.clone();
+
+        cloned_self.type_id = type_id;
+
+        cloned_self
+    }
+
+    pub fn using_format_version(&self, format_version: SemVer) -> Self {
+        let mut cloned_self = self.clone();
+
+        cloned_self.format_version = format_version;
+
+        cloned_self
     }
 }
 
@@ -40,6 +77,7 @@ impl<'a> Item<'a> {
 struct ItemTemplate<'a> {
     pub id: &'a str,
     pub components: Vec<String>,
+    pub format_version: String
 }
 
 #[derive(Template)]

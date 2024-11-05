@@ -6,14 +6,11 @@ use super::Block;
 pub struct BlockRegistry<'a> {
     pub blocks: Vec<Block<'a>>,
     pub block_atlas: Vec<BlockAtlasEntry>,
-    pub terrain_atlas: Vec<TerrainAtlasEntry>
+    pub terrain_atlas: Vec<TerrainAtlasEntry>,
 }
 
 #[derive(Template)]
-#[template(
-    path = "block_serialization/blocks.json.jinja2",
-    escape = "none"
-)]
+#[template(path = "block_serialization/blocks.json.jinja2", escape = "none")]
 pub struct BlockAtlasTemplate {
     pub content: String,
 }
@@ -63,10 +60,10 @@ impl TerrainAtlasEntry {
             .collect();
         TerrainAtlasEntryTemplate {
             texture_path: format!("textures/blocks/{}", id),
-            id
+            id,
         }
-            .render()
-            .unwrap()
+        .render()
+        .unwrap()
     }
 }
 
@@ -88,9 +85,7 @@ impl BlockAtlasEntry {
                 .chars()
                 .map(|x| if x == ':' { '_' } else { x })
                 .collect(),
-            id: self
-                .clone()
-                .id,
+            id: self.clone().id,
             sound: self.clone().sound,
         }
         .render()
@@ -123,7 +118,7 @@ impl<'a> BlockRegistry<'a> {
         Self {
             blocks: vec![],
             block_atlas: vec![],
-            terrain_atlas: vec![]
+            terrain_atlas: vec![],
         }
     }
 
@@ -133,7 +128,8 @@ impl<'a> BlockRegistry<'a> {
             id: block.clone().type_id.render(),
             path: block.clone().texture_set,
             textures: block
-                .type_id.render()
+                .type_id
+                .render()
                 .chars()
                 .into_iter()
                 .map(|x| if x == ':' { '_' } else { x })
@@ -142,7 +138,7 @@ impl<'a> BlockRegistry<'a> {
         });
         self.terrain_atlas.push(TerrainAtlasEntry {
             id: block.clone().type_id.render(),
-            texture_path: block.clone().texture_set
+            texture_path: block.clone().texture_set,
         });
     }
 }

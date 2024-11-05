@@ -3,8 +3,8 @@ use askama::Template;
 use super::Item;
 
 #[derive(Clone)]
-pub struct ItemRegistry<'a> {
-    pub items: Vec<Item<'a>>,
+pub struct ItemRegistry {
+    pub items: Vec<Item>,
     pub item_atlas: Vec<ItemAtlasEntry>,
 }
 
@@ -50,7 +50,7 @@ pub fn serialize_item_atlas(atlas: &Vec<ItemAtlasEntry>) -> String {
     atlas_string
 }
 
-impl<'a> ItemRegistry<'a> {
+impl ItemRegistry {
     pub fn new() -> Self {
         Self {
             items: vec![],
@@ -58,10 +58,10 @@ impl<'a> ItemRegistry<'a> {
         }
     }
 
-    pub fn add_item(&mut self, item: Item<'a>) {
+    pub fn add_item(&mut self, item: Item) {
         self.items.push(item.clone());
     }
-    
+
     pub fn add_texture(&mut self, entry: ItemAtlasEntry) {
         self.item_atlas.push(entry);
     }

@@ -1,9 +1,0 @@
-{
-  "resource_pack_name": "TestSecond",
-  "texture_name": "atlas.items",
-  "texture_data": {
-    "test_test": {
-      "textures": "textures/items/test_test"
-    }
-  }
-}

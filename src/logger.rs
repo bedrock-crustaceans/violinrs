@@ -3,7 +3,7 @@ use colored::Colorize;
 pub fn info(str: String, additional: String) {
     let output = format!(
         "{} {} {} {}",
-        "[ VioletCrystal ]".bright_magenta(),
+        "[ Violin ]".bright_magenta(),
         "[ INFO ]".bright_blue(),
         additional.bright_blue(),
         str
@@ -14,7 +14,7 @@ pub fn info(str: String, additional: String) {
 pub fn error(str: String, additional: String) {
     let output = format!(
         "{} {} {} {}",
-        "[ VioletCrystal ]".bright_magenta(),
+        "[ Violin ]".bright_magenta(),
         "[ ERROR ]".bright_red(),
         additional.bright_red(),
         str

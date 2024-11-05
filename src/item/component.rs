@@ -1,8 +1,7 @@
-use std::sync::Arc;
+use crate::vio::{Buildable, Identifier};
 use askama::Template;
-use crate::vio::Buildable;
 
-pub trait ItemComponent : Buildable {
+pub trait ItemComponent {
     fn serialize(&self) -> String;
 }
 
@@ -15,8 +14,19 @@ pub trait ItemComponent : Buildable {
 struct ItemDamageComponentTemplate {
     value: i32,
 }
+#[derive(Clone)]
 pub struct ItemDamageComponent {
-    pub value: i32,
+    value: i32,
+}
+
+impl ItemDamageComponent {
+    pub fn new(value: i32) -> Self {
+        ItemDamageComponent { value }
+    }
+
+    pub fn value(&self) -> i32 {
+        self.value
+    }
 }
 
 impl Buildable for ItemDamageComponent {}
@@ -24,9 +34,7 @@ impl Buildable for ItemDamageComponent {}
 impl ItemComponent for ItemDamageComponent {
     fn serialize(&self) -> String {
         let value = self.value;
-        let val = ItemDamageComponentTemplate { value }
-            .render()
-            .unwrap();
+        let val = ItemDamageComponentTemplate { value }.render().unwrap();
         val
     }
 }
@@ -37,22 +45,33 @@ impl ItemComponent for ItemDamageComponent {
     path = "item_serialization/components/display_name.json.jinja2",
     escape = "none"
 )]
-struct ItemDisplayNameComponentTemplate<'a> {
-    value: &'a str,
+struct ItemDisplayNameComponentTemplate {
+    value: String,
 }
-pub struct ItemDisplayNameComponent<'a> {
-    pub value: &'a str,
+#[derive(Clone)]
+pub struct ItemDisplayNameComponent {
+    value: String,
 }
 
-impl<'a> Buildable for ItemDisplayNameComponent<'a> {}
+impl Buildable for ItemDisplayNameComponent {}
 
-impl<'a> ItemComponent for ItemDisplayNameComponent<'a> {
+impl ItemComponent for ItemDisplayNameComponent {
     fn serialize(&self) -> String {
-        let value = self.value;
-        let val: String = ItemDisplayNameComponentTemplate { value }
-            .render()
-            .unwrap();
+        let value = self.value.clone();
+        let val: String = ItemDisplayNameComponentTemplate { value }.render().unwrap();
         val
+    }
+}
+
+impl ItemDisplayNameComponent {
+    pub fn new(value: impl Into<String>) -> Self {
+        Self {
+            value: value.into(),
+        }
+    }
+
+    pub fn name(&self) -> String {
+        self.value.clone()
     }
 }
 
@@ -62,22 +81,35 @@ impl<'a> ItemComponent for ItemDisplayNameComponent<'a> {
     path = "item_serialization/components/icon.json.jinja2",
     escape = "none"
 )]
-struct ItemIconComponentTemplate<'a> {
-    texture: &'a str,
+struct ItemIconComponentTemplate {
+    texture: String,
 }
-pub struct ItemIconComponent<'a> {
-    pub texture: &'a str,
+#[derive(Clone)]
+pub struct ItemIconComponent {
+    texture: String,
 }
 
-impl<'a> Buildable for ItemIconComponent<'a> {}
+impl Buildable for ItemIconComponent {}
 
-impl<'a> ItemComponent for ItemIconComponent<'a> {
+impl ItemComponent for ItemIconComponent {
     fn serialize(&self) -> String {
-        let value = self.texture;
+        let value = self.texture.clone();
         let val: String = ItemIconComponentTemplate { texture: value }
             .render()
             .unwrap();
         val
+    }
+}
+
+impl ItemIconComponent {
+    pub fn new(texture: impl Into<String>) -> Self {
+        Self {
+            texture: texture.into(),
+        }
+    }
+
+    pub fn texture(&self) -> String {
+        self.texture.clone()
     }
 }
 
@@ -90,8 +122,21 @@ impl<'a> ItemComponent for ItemIconComponent<'a> {
 struct ItemFuelComponentTemplate {
     duration: i32,
 }
+#[derive(Clone)]
 pub struct ItemFuelComponent {
-    pub duration: i32,
+    duration: i32,
+}
+
+impl ItemFuelComponent {
+    pub fn new(duration: i32) -> Self {
+        Self {
+            duration
+        }
+    }
+
+    pub fn duration(&self) -> i32 {
+        self.duration
+    }
 }
 
 impl Buildable for ItemFuelComponent {}
@@ -115,8 +160,21 @@ impl ItemComponent for ItemFuelComponent {
 struct ItemHandEquippedComponentTemplate {
     value: bool,
 }
+#[derive(Clone)]
 pub struct ItemHandEquippedComponent {
-    pub value: bool,
+    value: bool,
+}
+
+impl ItemHandEquippedComponent {
+    pub fn new(value: bool) -> Self {
+        Self {
+            value
+        }
+    }
+
+    pub fn value(&self) -> bool {
+        self.value
+    }
 }
 
 impl Buildable for ItemHandEquippedComponent {}
@@ -140,8 +198,9 @@ impl ItemComponent for ItemHandEquippedComponent {
 struct ItemAllowOffHandComponentTemplate {
     value: bool,
 }
+#[derive(Clone)]
 pub struct ItemAllowOffHandComponent {
-    pub value: bool,
+    value: bool,
 }
 
 impl Buildable for ItemAllowOffHandComponent {}
@@ -156,6 +215,18 @@ impl ItemComponent for ItemAllowOffHandComponent {
     }
 }
 
+impl ItemAllowOffHandComponent {
+    pub fn new(value: bool) -> Self {
+        Self {
+            value
+        }
+    }
+
+    pub fn value(&self) -> bool {
+        self.value
+    }
+}
+
 // * ItemMaxStackValueComponent
 #[derive(Template)]
 #[template(
@@ -163,10 +234,23 @@ impl ItemComponent for ItemAllowOffHandComponent {
     escape = "none"
 )]
 struct ItemMaxStackValueComponentTemplate {
-    value: bool,
+    value: i32,
 }
+#[derive(Clone)]
 pub struct ItemMaxStackValueComponent {
-    pub value: bool,
+    value: i32,
+}
+
+impl ItemMaxStackValueComponent {
+    pub fn new(value: i32) -> Self {
+        Self {
+            value
+        }
+    }
+
+    pub fn value(&self) -> i32 {
+        self.value
+    }
 }
 
 impl Buildable for ItemMaxStackValueComponent {}
@@ -192,6 +276,7 @@ struct ItemDurabilityComponentTemplate {
     max_chance: i32,
     durability: i32,
 }
+#[derive(Clone)]
 pub struct ItemDurabilityComponent {
     min_chance: i32,
     max_chance: i32,
@@ -216,6 +301,26 @@ impl ItemComponent for ItemDurabilityComponent {
     }
 }
 
+impl ItemDurabilityComponent {
+    pub fn new(min_chance: i32, max_chance: i32, durability: i32) -> Self {
+        Self {
+            min_chance, max_chance, durability
+        }
+    }
+
+    pub fn min_chance(&self) -> i32 {
+        self.min_chance
+    }
+
+    pub fn max_chance(&self) -> i32 {
+        self.max_chance
+    }
+
+    pub fn durability(&self) -> i32 {
+        self.durability
+    }
+}
+
 // * ItemArmorComponent
 #[derive(Template)]
 #[template(
@@ -225,8 +330,21 @@ impl ItemComponent for ItemDurabilityComponent {
 struct ItemArmorComponentTemplate {
     protection: i32,
 }
+#[derive(Clone)]
 pub struct ItemArmorComponent {
-    pub protection: i32,
+    protection: i32,
+}
+
+impl ItemArmorComponent {
+    pub fn new(protection: i32) -> Self {
+        Self {
+            protection
+        }
+    }
+
+    pub fn protection(&self) -> i32 {
+        self.protection
+    }
 }
 
 impl Buildable for ItemArmorComponent {}
@@ -241,53 +359,41 @@ impl ItemComponent for ItemArmorComponent {
     }
 }
 
-// * ItemRenderOffsetsComponent
-#[derive(Template)]
-#[template(
-    path = "item_serialization/components/render_offsets.json.jinja2",
-    escape = "none"
-)]
-struct ItemRenderOffsetsComponentTemplate<'a> {
-    value: &'a str,
-}
-pub struct ItemRenderOffsetsComponent<'a> {
-    pub value: &'a str,
-}
-
-impl<'a> Buildable for ItemRenderOffsetsComponent<'a> {}
-
-impl<'a> ItemComponent for ItemRenderOffsetsComponent<'a> {
-    fn serialize(&self) -> String {
-        let value = self.value;
-        let val: String = ItemRenderOffsetsComponentTemplate { value }
-            .render()
-            .unwrap();
-        val
-    }
-}
-
 // * ItemCreativeCategoryComponent
 #[derive(Template)]
 #[template(
     path = "item_serialization/components/creative_category.json.jinja2",
     escape = "none"
 )]
-struct ItemCreativeCategoryComponentTemplate<'a> {
-    parent: &'a str,
+struct ItemCreativeCategoryComponentTemplate {
+    parent: String,
 }
-pub struct ItemCreativeCategoryComponent<'a> {
-    pub parent: &'a str,
+#[derive(Clone)]
+pub struct ItemCreativeCategoryComponent {
+    parent: String,
 }
 
-impl<'a> Buildable for ItemCreativeCategoryComponent<'a> {}
+impl Buildable for ItemCreativeCategoryComponent {}
 
-impl<'a> ItemComponent for ItemCreativeCategoryComponent<'a> {
+impl ItemComponent for ItemCreativeCategoryComponent {
     fn serialize(&self) -> String {
-        let parent = self.parent;
+        let parent = self.parent.clone();
         let val: String = ItemCreativeCategoryComponentTemplate { parent }
             .render()
             .unwrap();
         val
+    }
+}
+
+impl ItemCreativeCategoryComponent {
+    pub fn new(parent: impl Into<String>) -> Self {
+        Self {
+            parent: parent.into()
+        }
+    }
+
+    pub fn parent(&self) -> String {
+        self.parent.clone()
     }
 }
 
@@ -298,21 +404,37 @@ impl<'a> ItemComponent for ItemCreativeCategoryComponent<'a> {
     path = "item_serialization/components/item_repair_entry.json.jinja2",
     escape = "none"
 )]
-struct ItemRepairEntryTemplate<'a> {
+struct ItemRepairEntryTemplate {
     items: String,
-    amount: &'a String,
+    amount: String,
 }
 
-pub struct ItemRepairEntry<'a> {
-    pub items: Vec<&'a str>,
-    pub amount: String,
+#[derive(Clone)]
+pub struct ItemRepairEntry {
+    items: Vec<String>,
+    amount: String,
 }
-impl<'a> ItemRepairEntry<'a> {
+impl ItemRepairEntry {
     pub fn serialize(&self) -> String {
         let items = format!("{:?}", self.items);
-        let amount = &self.amount;
+        let amount = self.amount.clone();
         let val: String = ItemRepairEntryTemplate { items, amount }.render().unwrap();
         val
+    }
+
+    pub fn new(items: Vec<impl Into<String> + Clone>, amount: impl Into<String>) -> Self {
+        Self {
+            items: items.iter().map(|x| (*x).clone().into()).collect(),
+            amount: amount.into(),
+        }
+    }
+
+    pub fn amount(&self) -> String {
+        self.amount.clone()
+    }
+
+    pub fn items(&self) -> Vec<String> {
+        self.items.clone()
     }
 }
 
@@ -334,13 +456,14 @@ fn serialize_item_repairable_entries(repair_entries: &Vec<ItemRepairEntry>) -> S
 struct ItemRepairableComponentTemplate {
     repair_entries: String,
 }
-pub struct ItemRepairableComponent<'a> {
-    pub repair_entries: Vec<ItemRepairEntry<'a>>,
+#[derive(Clone)]
+pub struct ItemRepairableComponent {
+    repair_entries: Vec<ItemRepairEntry>,
 }
 
-impl<'a> Buildable for ItemRepairableComponent<'a> {}
+impl Buildable for ItemRepairableComponent {}
 
-impl<'a> ItemComponent for ItemRepairableComponent<'a> {
+impl ItemComponent for ItemRepairableComponent {
     fn serialize(&self) -> String {
         let repair_entries = &self.repair_entries;
         let val: String = ItemRepairableComponentTemplate {
@@ -349,6 +472,18 @@ impl<'a> ItemComponent for ItemRepairableComponent<'a> {
         .render()
         .unwrap();
         val
+    }
+}
+
+impl ItemRepairableComponent {
+    pub fn new(repair_entries: Vec<ItemRepairEntry>) -> Self {
+        Self {
+            repair_entries
+        }
+    }
+
+    pub fn repair_entries(&self) -> Vec<ItemRepairEntry> {
+        self.repair_entries.clone()
     }
 }
 
@@ -363,18 +498,32 @@ pub struct ItemCustomComponentsTemplate {
     pub components: String,
 }
 
-pub struct ItemCustomComponents<'a> {
-    pub components: Vec<&'a str>,
+#[derive(Clone)]
+pub struct ItemCustomComponents {
+    components: Vec<Identifier>,
 }
 
-impl<'a> Buildable for ItemCustomComponents<'a> {}
+impl Buildable for ItemCustomComponents {}
 
-impl<'a> ItemComponent for ItemCustomComponents<'a> {
+impl ItemComponent for ItemCustomComponents {
     fn serialize(&self) -> String {
-        let components = format!("{:?}", self.components);
+        let components_ser: Vec<String> = self.components.iter().map(|x| x.render()).collect();
+        let components = format!("{:?}", components_ser);
         let val: String = ItemCustomComponentsTemplate { components }
             .render()
             .unwrap();
         val
+    }
+}
+
+impl ItemCustomComponents {
+    pub fn new(components: Vec<Identifier>) -> Self {
+        Self {
+            components
+        }
+    }
+
+    pub fn components(&self) -> Vec<Identifier> {
+        self.components.clone()
     }
 }
