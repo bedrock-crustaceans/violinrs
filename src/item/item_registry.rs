@@ -1,5 +1,5 @@
 use askama::Template;
-
+use crate::image::Image;
 use super::Item;
 
 #[derive(Clone)]
@@ -21,7 +21,7 @@ struct ItemAtlasEntryTemplate {
 #[derive(Clone)]
 pub struct ItemAtlasEntry {
     pub id: String,
-    pub path: String,
+    pub src: Image,
     pub texture_name: String,
 }
 impl ItemAtlasEntry {
@@ -37,6 +37,14 @@ impl ItemAtlasEntry {
         }
         .render()
         .unwrap()
+    }
+
+    pub fn new(id: impl Into<String>, file_name: impl Into<String>, src: Image) -> Self {
+        Self {
+            id: id.into(),
+            texture_name: file_name.into(),
+            src
+        }
     }
 }
 
