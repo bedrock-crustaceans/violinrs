@@ -31,7 +31,7 @@ pub struct Pair<T, K> {
     pub second: K,
 }
 
-pub trait Buildable : Clone {
+pub trait Buildable: Clone {
     fn build(&self) -> Arc<Self> {
         Arc::new(self.clone())
     }
@@ -41,7 +41,7 @@ pub trait Buildable : Clone {
 pub struct SemVer {
     major: i32,
     minor: i32,
-    patch: i32
+    patch: i32,
 }
 
 impl SemVer {
@@ -49,7 +49,7 @@ impl SemVer {
         Self {
             major,
             minor,
-            patch
+            patch,
         }
     }
 

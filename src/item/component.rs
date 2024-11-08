@@ -129,9 +129,7 @@ pub struct ItemFuelComponent {
 
 impl ItemFuelComponent {
     pub fn new(duration: i32) -> Self {
-        Self {
-            duration
-        }
+        Self { duration }
     }
 
     pub fn duration(&self) -> i32 {
@@ -167,9 +165,7 @@ pub struct ItemHandEquippedComponent {
 
 impl ItemHandEquippedComponent {
     pub fn new(value: bool) -> Self {
-        Self {
-            value
-        }
+        Self { value }
     }
 
     pub fn value(&self) -> bool {
@@ -217,9 +213,7 @@ impl ItemComponent for ItemAllowOffHandComponent {
 
 impl ItemAllowOffHandComponent {
     pub fn new(value: bool) -> Self {
-        Self {
-            value
-        }
+        Self { value }
     }
 
     pub fn value(&self) -> bool {
@@ -243,9 +237,7 @@ pub struct ItemMaxStackValueComponent {
 
 impl ItemMaxStackValueComponent {
     pub fn new(value: i32) -> Self {
-        Self {
-            value
-        }
+        Self { value }
     }
 
     pub fn value(&self) -> i32 {
@@ -304,7 +296,9 @@ impl ItemComponent for ItemDurabilityComponent {
 impl ItemDurabilityComponent {
     pub fn new(min_chance: i32, max_chance: i32, durability: i32) -> Self {
         Self {
-            min_chance, max_chance, durability
+            min_chance,
+            max_chance,
+            durability,
         }
     }
 
@@ -337,9 +331,7 @@ pub struct ItemArmorComponent {
 
 impl ItemArmorComponent {
     pub fn new(protection: i32) -> Self {
-        Self {
-            protection
-        }
+        Self { protection }
     }
 
     pub fn protection(&self) -> i32 {
@@ -388,7 +380,7 @@ impl ItemComponent for ItemCreativeCategoryComponent {
 impl ItemCreativeCategoryComponent {
     pub fn new(parent: impl Into<String>) -> Self {
         Self {
-            parent: parent.into()
+            parent: parent.into(),
         }
     }
 
@@ -477,9 +469,7 @@ impl ItemComponent for ItemRepairableComponent {
 
 impl ItemRepairableComponent {
     pub fn new(repair_entries: Vec<ItemRepairEntry>) -> Self {
-        Self {
-            repair_entries
-        }
+        Self { repair_entries }
     }
 
     pub fn repair_entries(&self) -> Vec<ItemRepairEntry> {
@@ -518,9 +508,7 @@ impl ItemComponent for ItemCustomComponents {
 
 impl ItemCustomComponents {
     pub fn new(components: Vec<Identifier>) -> Self {
-        Self {
-            components
-        }
+        Self { components }
     }
 
     pub fn components(&self) -> Vec<Identifier> {

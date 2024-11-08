@@ -25,7 +25,7 @@ impl Item {
         ItemTemplate {
             id: &self.type_id.render(),
             components: components_strings,
-            format_version: self.format_version.render()
+            format_version: self.format_version.render(),
         }
         .render()
         .unwrap()
@@ -35,7 +35,7 @@ impl Item {
         Item {
             type_id,
             components: vec![],
-            format_version: SemVer::new(1, 21, 0)
+            format_version: SemVer::new(1, 21, 0),
         }
     }
 
@@ -77,7 +77,7 @@ impl Item {
 struct ItemTemplate<'a> {
     pub id: &'a str,
     pub components: Vec<String>,
-    pub format_version: String
+    pub format_version: String,
 }
 
 #[derive(Template)]

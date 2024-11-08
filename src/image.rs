@@ -1,12 +1,12 @@
-use std::path::{PathBuf};
 use hsl::HSL;
 use image::{ImageBuffer, Pixel, Rgb, RgbImage, Rgba, RgbaImage};
+use std::path::PathBuf;
 
 #[derive(Clone)]
 pub struct Image {
     source: PathBuf,
     hue_shift: f64,
-    img: RgbaImage
+    img: RgbaImage,
 }
 
 impl Image {
@@ -14,7 +14,11 @@ impl Image {
         Self {
             source: src.clone().into(),
             hue_shift: 0.0,
-            img: image::ImageReader::open(src.into()).unwrap().decode().unwrap().to_rgba8()
+            img: image::ImageReader::open(src.into())
+                .unwrap()
+                .decode()
+                .unwrap()
+                .to_rgba8(),
         }
     }
 

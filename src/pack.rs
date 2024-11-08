@@ -1,19 +1,20 @@
-use std::fs;
-use std::path::PathBuf;
-use std::string::ToString;
-use crate::recipe::Recipe;
-use askama::Template;
-use fs_extra::dir;
-use fs_extra::dir::DirEntryAttr::Path;
 use crate::item::item_registry::{serialize_item_atlas, ItemTexture};
 use crate::item::ItemAtlasTemplate;
 use crate::item::{item_registry::ItemRegistry, Item};
 use crate::logger::info;
+use crate::recipe::Recipe;
 use crate::template::{BpManifestTemplate, RpManifestTemplate};
+use askama::Template;
+use fs_extra::dir;
+use fs_extra::dir::DirEntryAttr::Path;
+use std::fs;
+use std::path::PathBuf;
+use std::string::ToString;
+use std::sync::Arc;
 
 use crate::block::block_registry::{
-    serialize_block_atlas, serialize_terrain_atlas, BlockAtlasTemplate,
-    BlockRegistry, TerrainAtlasTemplate,
+    serialize_block_atlas, serialize_terrain_atlas, BlockAtlasTemplate, BlockRegistry,
+    TerrainAtlasTemplate,
 };
 use crate::block::Block;
 use uuid::Uuid;
@@ -38,7 +39,7 @@ pub struct Pack<'a> {
     pub dev_rp_folder: &'a str,
     pub icon: &'a str,
     pub item_registry: ItemRegistry,
-    pub recipes: Vec<&'a dyn Recipe>,
+    pub recipes: Vec<Arc<dyn Recipe>>,
     pub block_registry: BlockRegistry<'a>,
 }
 
@@ -85,7 +86,9 @@ impl<'a> Pack<'a> {
         );
 
         if let Ok(content) = fs::read_dir(format!("./violin_output/packs/{}/BP", &self.id)) {
-            let mut files = fs_extra::dir::get_dir_content(format!("./violin_output/packs/{}/BP", &self.id)).unwrap();
+            let mut files =
+                fs_extra::dir::get_dir_content(format!("./violin_output/packs/{}/BP", &self.id))
+                    .unwrap();
             for file in files.files.iter() {
                 if file.ends_with("manifest.json") {
                     continue;
@@ -94,7 +97,9 @@ impl<'a> Pack<'a> {
             }
         }
         if let Ok(content) = fs::read_dir(format!("./violin_output/packs/{}/RP", &self.id)) {
-            let mut files = fs_extra::dir::get_dir_content(format!("./violin_output/packs/{}/RP", &self.id)).unwrap();
+            let mut files =
+                fs_extra::dir::get_dir_content(format!("./violin_output/packs/{}/RP", &self.id))
+                    .unwrap();
             for file in files.files.iter() {
                 if file.ends_with("manifest.json") {
                     continue;
@@ -105,7 +110,12 @@ impl<'a> Pack<'a> {
         let _ = fs::create_dir_all(format!("./violin_output/packs/{}/BP", &self.id));
         let _ = fs::create_dir_all(format!("./violin_output/packs/{}/RP", &self.id));
 
-        if !fs::exists(format!("./violin_output/packs/{}/BP/manifest.json", &self.id)).unwrap_or(true) {
+        if !fs::exists(format!(
+            "./violin_output/packs/{}/BP/manifest.json",
+            &self.id
+        ))
+        .unwrap_or(true)
+        {
             let bp_manifest: String = BpManifestTemplate {
                 name: &self.name.as_str(),
                 author: &self.author.as_str(),
@@ -127,10 +137,7 @@ impl<'a> Pack<'a> {
             .render()
             .unwrap();
             match fs::write(
-                format!(
-                    "./{RESULT_FOLDER}/packs/{}/BP/manifest.json",
-                    &self.id
-                ),
+                format!("./{RESULT_FOLDER}/packs/{}/BP/manifest.json", &self.id),
                 bp_manifest,
             ) {
                 Ok(_) => (),
@@ -148,10 +155,7 @@ impl<'a> Pack<'a> {
             .render()
             .unwrap();
             match fs::write(
-                format!(
-                    "./{RESULT_FOLDER}/packs/{}/RP/manifest.json",
-                    &self.id
-                ),
+                format!("./{RESULT_FOLDER}/packs/{}/RP/manifest.json", &self.id),
                 rp_manifest,
             ) {
                 Ok(_) => (),
@@ -172,18 +176,12 @@ impl<'a> Pack<'a> {
 
         let _ = fs::copy(
             &self.icon,
-            format!(
-                "./{RESULT_FOLDER}/packs/{}/BP/pack_icon.png",
-                &self.id
-            ),
+            format!("./{RESULT_FOLDER}/packs/{}/BP/pack_icon.png", &self.id),
         );
 
         let _ = fs::copy(
             &self.icon,
-            format!(
-                "./{RESULT_FOLDER}/packs/{}/RP/pack_icon.png",
-                &self.id
-            ),
+            format!("./{RESULT_FOLDER}/packs/{}/RP/pack_icon.png", &self.id),
         );
 
         if self.use_scripts {
@@ -195,10 +193,10 @@ impl<'a> Pack<'a> {
         self.generate_recipes();
     }
 
-    pub fn register_recipe<'b>(&mut self, recipe: &'a dyn Recipe) {
-        self.recipes.push(recipe);
+    pub fn register_recipe<'b>(&mut self, recipe: Arc<dyn Recipe>) {
+        self.recipes.push(recipe.clone());
         info(
-            format!("Registering recipe {}", recipe.id()),
+            format!("Registering recipe {}", recipe.id().render()),
             "[ RECIPE ]".to_string(),
         );
     }
@@ -223,14 +221,8 @@ impl<'a> Pack<'a> {
     }
 
     fn generate_items(&mut self) {
-        let _ = fs::create_dir_all(format!(
-            "./{RESULT_FOLDER}/packs/{}/BP/items/",
-            &self.id
-        ));
-        let _ = fs::create_dir_all(format!(
-            "./{RESULT_FOLDER}/packs/{}/RP/textures/",
-            &self.id
-        ));
+        let _ = fs::create_dir_all(format!("./{RESULT_FOLDER}/packs/{}/BP/items/", &self.id));
+        let _ = fs::create_dir_all(format!("./{RESULT_FOLDER}/packs/{}/RP/textures/", &self.id));
 
         let itreg = self.item_registry.clone();
 
@@ -302,8 +294,12 @@ impl<'a> Pack<'a> {
     }
 
     pub fn build_to_dev(&self) {
+        let _ = fs::remove_dir_all(format!("{}/{}_BP", &self.dev_bp_folder, &self.id));
+        let _ = fs::remove_dir_all(format!("{}/{}_RP", &self.dev_rp_folder, &self.id));
+
         let _ = fs::create_dir_all(format!("{}/{}_BP", &self.dev_bp_folder, &self.id));
         let _ = fs::create_dir_all(format!("{}/{}_RP", &self.dev_rp_folder, &self.id));
+
 
         info(
             format!("Copying {}'s BP to DevBPFolder", &self.id),
@@ -326,10 +322,7 @@ impl<'a> Pack<'a> {
     }
 
     pub fn pair_scripts(&self) {
-        let _ = fs::create_dir_all(format!(
-            "./{RESULT_FOLDER}/packs/{}/BP/scripts/",
-            &self.id
-        ));
+        let _ = fs::create_dir_all(format!("./{RESULT_FOLDER}/packs/{}/BP/scripts/", &self.id));
         // let path = self.scripts.as_ref().unwrap().paired_scripts_folder;
         // let _ = fs_extra::dir::copy(
         //     path,
@@ -346,18 +339,16 @@ impl<'a> Pack<'a> {
     }
 
     fn generate_recipes(&self) {
-        let _ = fs::create_dir_all(format!(
-            "./{RESULT_FOLDER}/packs/{}/BP/recipes/",
-            &self.id
-        ));
-        let iterator: &Vec<&dyn Recipe> = self.recipes.as_ref();
+        let _ = fs::create_dir_all(format!("./{RESULT_FOLDER}/packs/{}/BP/recipes/", &self.id));
+        let iterator: Vec<Arc<dyn Recipe>> = self.recipes.clone();
         for recipe in iterator {
             info(
-                format!("Generating Recipe \"{}\"", &recipe.id()),
+                format!("Generating Recipe \"{}\"", recipe.id().render()),
                 "[ RECIPE ]".to_string(),
             );
             let file_name: String = recipe
                 .id()
+                .render()
                 .chars()
                 .into_iter()
                 .map(|el| if el == ':' { '_' } else { el })
@@ -378,14 +369,8 @@ impl<'a> Pack<'a> {
     }
 
     fn generate_blocks(&mut self) {
-        let _ = fs::create_dir_all(format!(
-            "./{RESULT_FOLDER}/packs/{}/BP/blocks/",
-            &self.id
-        ));
-        let _ = fs::create_dir_all(format!(
-            "./{RESULT_FOLDER}/packs/{}/RP/textures/",
-            &self.id
-        ));
+        let _ = fs::create_dir_all(format!("./{RESULT_FOLDER}/packs/{}/BP/blocks/", &self.id));
+        let _ = fs::create_dir_all(format!("./{RESULT_FOLDER}/packs/{}/RP/textures/", &self.id));
 
         for block in self.block_registry.blocks.iter() {
             extern crate jsonxf;
@@ -453,10 +438,7 @@ impl<'a> Pack<'a> {
     }
 
     fn generate_terrain_atlas(&self) {
-        let _ = fs::create_dir_all(format!(
-            "./{RESULT_FOLDER}/packs/{}/RP/textures/",
-            &self.id
-        ));
+        let _ = fs::create_dir_all(format!("./{RESULT_FOLDER}/packs/{}/RP/textures/", &self.id));
         let content_raw = TerrainAtlasTemplate {
             content: serialize_terrain_atlas(&self.block_registry.terrain_atlas),
             pack_name: self.name.clone(),

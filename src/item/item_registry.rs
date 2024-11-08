@@ -1,6 +1,6 @@
-use askama::Template;
-use crate::image::Image;
 use super::Item;
+use crate::image::Image;
+use askama::Template;
 
 #[derive(Clone)]
 pub struct ItemRegistry {
@@ -43,7 +43,7 @@ impl ItemTexture {
         Self {
             id: id.into(),
             texture_name: file_name.into(),
-            src
+            src,
         }
     }
 }

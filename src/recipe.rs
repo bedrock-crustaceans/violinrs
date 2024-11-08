@@ -1,30 +1,88 @@
+use crate::vio::{Buildable, Identifier};
 use askama::Template;
 
 pub trait Recipe {
     fn serialize(&self) -> String;
-    fn id(&self) -> String;
+    fn id(&self) -> Identifier;
 }
 
-pub struct RecipeInputOrOutput<'a> {
+#[derive(Clone)]
+pub struct RecipeIO {
     pub use_tag: bool,
-    pub item: Option<&'a str>,
+    pub item: Option<Identifier>,
     pub data: Option<i32>,
     pub count: Option<i32>,
-    pub tag: Option<&'a str>,
-    pub key: Option<&'a str>,
+    pub tag: Option<String>,
+    pub key: Option<char>,
 }
 
-fn serialize_ingredients(ingredients: &Vec<RecipeInputOrOutput>) -> String {
+impl RecipeIO {
+    pub fn new_typed(item: Identifier) -> Self {
+        Self {
+            use_tag: false,
+            item: Some(item),
+            data: Some(0),
+            count: None,
+            tag: None,
+            key: None,
+        }
+    }
+
+    pub fn new_tagged(tag: impl Into<String>) -> Self {
+        Self {
+            use_tag: true,
+            item: None,
+            data: None,
+            count: None,
+            tag: Some(tag.into()),
+            key: None,
+        }
+    }
+
+    pub fn using_key(&mut self, key: char) -> Self {
+        let mut self_cloned: Self = self.clone();
+
+        self_cloned.key = Some(key);
+
+        self_cloned
+    }
+
+    pub fn using_count(&mut self, count: i32) -> Self {
+        let mut self_cloned: Self = self.clone();
+
+        self_cloned.count = Some(count);
+
+        self_cloned
+    }
+
+    pub fn using_data(&mut self, data: i32) -> Self {
+        let mut self_cloned: Self = self.clone();
+
+        self_cloned.data = Some(data);
+
+        self_cloned
+    }
+}
+
+fn serialize_ingredients(ingredients: &Vec<RecipeIO>) -> String {
     let mut final_string = String::from("");
     for ingredient in ingredients {
         let val = RecipeInputTemplate {
             use_tag: ingredient.use_tag,
-            item: ingredient.item.unwrap_or("null").to_string(),
+            item: ingredient
+                .item
+                .clone()
+                .unwrap_or(Identifier::new("null", "null"))
+                .render(),
             data: ingredient.data.unwrap_or(0),
             count: ingredient.count.unwrap_or(0),
-            tag: ingredient.tag.unwrap_or("null").to_string(),
+            tag: ingredient
+                .tag
+                .clone()
+                .unwrap_or("no".to_string())
+                .to_string(),
             has_count: ingredient.count.is_some(),
-            key: ingredient.key.unwrap_or("null").to_string(),
+            key: ingredient.key.unwrap_or('N').to_string(),
             has_key: ingredient.key.is_some(),
         }
         .render()
@@ -52,16 +110,20 @@ struct RecipeInputTemplate {
     pub has_key: bool,
 }
 
-impl<'a> RecipeInputOrOutput<'a> {
+impl RecipeIO {
     pub fn serialize(&self) -> String {
         RecipeInputTemplate {
             use_tag: self.use_tag,
-            item: self.item.unwrap_or("null").to_string(),
+            item: self
+                .item
+                .clone()
+                .unwrap_or(Identifier::new("null", "null"))
+                .render(),
             data: self.data.unwrap_or(0),
             count: self.count.unwrap_or(0),
-            tag: self.tag.unwrap_or("null").to_string(),
+            tag: self.tag.clone().unwrap_or("null".to_string()).to_string(),
             has_count: self.count.is_some(),
-            key: self.key.unwrap_or("null").to_string(),
+            key: self.key.unwrap_or('N').to_string(),
             has_key: self.key.is_some(),
         }
         .render()
@@ -71,27 +133,49 @@ impl<'a> RecipeInputOrOutput<'a> {
 
 // * FurnaceRecipe
 
-pub struct FurnaceRecipe<'a> {
-    pub id: &'a str,
-    pub tags: Vec<&'a str>,
-    pub input: RecipeInputOrOutput<'a>,
-    pub output: &'a str,
+#[derive(Clone)]
+pub struct FurnaceRecipe {
+    pub id: Identifier,
+    pub tags: Vec<String>,
+    pub input: RecipeIO,
+    pub output: Identifier
 }
-impl<'a> Recipe for FurnaceRecipe<'a> {
+impl Recipe for FurnaceRecipe {
     fn serialize(&self) -> String {
         FurnaceRecipeTemplate {
-            id: self.id.to_string(),
+            id: self.id.render(),
             tags: format!("{:?}", self.tags),
             input: self.input.serialize(),
-            output: self.output.to_string(),
+            output: self.output.render(),
         }
         .render()
         .unwrap()
     }
-    fn id(&self) -> String {
-        self.id.to_string()
+    fn id(&self) -> Identifier {
+        self.id.clone()
     }
 }
+
+impl FurnaceRecipe {
+    pub fn new(id: Identifier, input: RecipeIO, output: Identifier) -> Self {
+        Self {
+            id,
+            tags: vec![],
+            input,
+            output,
+        }
+    }
+
+    pub fn using_tags(&mut self, tags: Vec<impl Into<String> + Clone>) -> Self {
+        let mut clone_self = self.clone();
+
+        clone_self.tags = tags.iter().map(|x| (*x).clone().into()).collect();
+
+        clone_self
+    }
+}
+
+impl Buildable for FurnaceRecipe {}
 
 #[derive(Template)]
 #[template(
@@ -107,17 +191,18 @@ struct FurnaceRecipeTemplate {
 
 // * ShapelessRecipe
 
-pub struct ShapelessRecipe<'a> {
-    pub id: &'a str,
-    pub tags: Vec<&'a str>,
-    pub ingredients: Vec<RecipeInputOrOutput<'a>>,
-    pub result: RecipeInputOrOutput<'a>,
+#[derive(Clone)]
+pub struct ShapelessRecipe {
+    pub id: Identifier,
+    pub tags: Vec<String>,
+    pub ingredients: Vec<RecipeIO>,
+    pub result: RecipeIO,
 }
-impl<'a> Recipe for ShapelessRecipe<'a> {
+impl Recipe for ShapelessRecipe {
     fn serialize(&self) -> String {
-        let ingredients: &Vec<RecipeInputOrOutput> = self.ingredients.as_ref();
+        let ingredients: &Vec<RecipeIO> = self.ingredients.as_ref();
         ShapelessRecipeTemplate {
-            id: self.id.to_string(),
+            id: self.id.render(),
             tags: format!("{:?}", self.tags),
             ingredients: serialize_ingredients(ingredients),
             result: self.result.serialize(),
@@ -125,8 +210,37 @@ impl<'a> Recipe for ShapelessRecipe<'a> {
         .render()
         .unwrap()
     }
-    fn id(&self) -> String {
-        self.id.to_string()
+    fn id(&self) -> Identifier {
+        self.id.clone()
+    }
+}
+
+impl Buildable for ShapelessRecipe {}
+
+impl ShapelessRecipe {
+    pub fn new(id: Identifier, result: RecipeIO) -> Self {
+        Self {
+            id,
+            tags: vec![],
+            ingredients: vec![],
+            result
+        }
+    }
+
+    pub fn using_tags(&mut self, tags: Vec<impl Into<String> + Clone>) -> Self {
+        let mut cloned_self = self.clone();
+
+        cloned_self.tags = tags.iter().map(|x| (*x).clone().into()).collect();
+
+        cloned_self
+    }
+
+    pub fn using_ingredients(&mut self, ingredients: Vec<RecipeIO>) -> Self {
+        let mut cloned_self = self.clone();
+
+        cloned_self.ingredients = ingredients;
+
+        cloned_self
     }
 }
 
@@ -144,19 +258,20 @@ struct ShapelessRecipeTemplate {
 
 // * ShapedRecipe
 
-pub struct ShapedRecipe<'a> {
-    pub id: &'a str,
-    pub tags: Vec<&'a str>,
-    pub ingredients: Vec<RecipeInputOrOutput<'a>>,
-    pub result: RecipeInputOrOutput<'a>,
-    pub pattern: Vec<&'a str>,
+#[derive(Clone)]
+pub struct ShapedRecipe {
+    pub id: Identifier,
+    pub tags: Vec<String>,
+    pub ingredients: Vec<RecipeIO>,
+    pub result: RecipeIO,
+    pub pattern: Vec<String>,
 }
 
-impl<'a> Recipe for ShapedRecipe<'a> {
+impl Recipe for ShapedRecipe {
     fn serialize(&self) -> String {
-        let ingredients: &Vec<RecipeInputOrOutput> = self.ingredients.as_ref();
+        let ingredients: &Vec<RecipeIO> = self.ingredients.as_ref();
         ShapedRecipeTemplate {
-            id: self.id.to_string(),
+            id: self.id.render(),
             tags: format!("{:?}", self.tags),
             ingredients: serialize_ingredients(ingredients),
             result: self.result.serialize(),
@@ -165,10 +280,48 @@ impl<'a> Recipe for ShapedRecipe<'a> {
         .render()
         .unwrap()
     }
-    fn id(&self) -> String {
-        self.id.to_string()
+    fn id(&self) -> Identifier {
+        self.id.clone()
     }
 }
+
+impl ShapedRecipe {
+    pub fn new(id: Identifier, result: RecipeIO) -> Self {
+        Self {
+            id,
+            tags: vec![],
+            ingredients: vec![],
+            result,
+            pattern: vec![],
+        }
+    }
+
+    pub fn using_tags(&mut self, tags: Vec<impl Into<String> + Clone>) -> Self {
+        let mut self_cloned: Self = self.clone();
+
+        self_cloned.tags = tags.iter().map(|x| (*x).clone().into()).collect();
+
+        self_cloned
+    }
+
+    pub fn using_pattern(&mut self, pattern: Vec<impl Into<String> + Clone>) -> Self {
+        let mut self_cloned: Self = self.clone();
+
+        self_cloned.pattern = pattern.iter().map(|x| (*x).clone().into()).collect();
+
+        self_cloned
+    }
+
+    pub fn using_ingredients(&mut self, ingredients: Vec<RecipeIO>) -> Self {
+        let mut self_cloned: Self = self.clone();
+
+        self_cloned.ingredients = ingredients;
+
+        self_cloned
+    }
+}
+
+impl Buildable for ShapedRecipe {}
 
 #[derive(Template)]
 #[template(
