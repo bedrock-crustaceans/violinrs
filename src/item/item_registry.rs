@@ -5,7 +5,7 @@ use super::Item;
 #[derive(Clone)]
 pub struct ItemRegistry {
     pub items: Vec<Item>,
-    pub item_atlas: Vec<ItemAtlasEntry>,
+    pub item_atlas: Vec<ItemTexture>,
 }
 
 #[derive(Template)]
@@ -19,12 +19,12 @@ struct ItemAtlasEntryTemplate {
 }
 
 #[derive(Clone)]
-pub struct ItemAtlasEntry {
+pub struct ItemTexture {
     pub id: String,
     pub src: Image,
     pub texture_name: String,
 }
-impl ItemAtlasEntry {
+impl ItemTexture {
     fn serialize(&self) -> String {
         ItemAtlasEntryTemplate {
             texture_path: format!("textures/items/{}", self.clone().texture_name),
@@ -48,7 +48,7 @@ impl ItemAtlasEntry {
     }
 }
 
-pub fn serialize_item_atlas(atlas: &Vec<ItemAtlasEntry>) -> String {
+pub fn serialize_item_atlas(atlas: &Vec<ItemTexture>) -> String {
     let mut atlas_string = String::new();
     for entry in atlas {
         atlas_string.push_str(&entry.serialize());
@@ -70,7 +70,7 @@ impl ItemRegistry {
         self.items.push(item.clone());
     }
 
-    pub fn add_texture(&mut self, entry: ItemAtlasEntry) {
+    pub fn add_texture(&mut self, entry: ItemTexture) {
         self.item_atlas.push(entry);
     }
 }

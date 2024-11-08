@@ -4,8 +4,8 @@ use std::string::ToString;
 use crate::recipe::Recipe;
 use askama::Template;
 use fs_extra::dir;
-
-use crate::item::item_registry::{serialize_item_atlas, ItemAtlasEntry};
+use fs_extra::dir::DirEntryAttr::Path;
+use crate::item::item_registry::{serialize_item_atlas, ItemTexture};
 use crate::item::ItemAtlasTemplate;
 use crate::item::{item_registry::ItemRegistry, Item};
 use crate::logger::info;
@@ -78,16 +78,34 @@ impl<'a> Pack<'a> {
         pack
     }
 
-    pub fn generate(&mut self, regenerate_manifests: bool) -> () {
+    pub fn generate(&mut self) -> () {
         info(
             format!("Creating Pack \"{}\"(\"{}\")", &self.name, &self.id),
             "[ PACK ]".to_string(),
         );
 
+        if let Ok(content) = fs::read_dir(format!("./violin_output/packs/{}/BP", &self.id)) {
+            let mut files = fs_extra::dir::get_dir_content(format!("./violin_output/packs/{}/BP", &self.id)).unwrap();
+            for file in files.files.iter() {
+                if file.ends_with("manifest.json") {
+                    continue;
+                }
+                fs::remove_file(file).expect("Cannot remove file");
+            }
+        }
+        if let Ok(content) = fs::read_dir(format!("./violin_output/packs/{}/RP", &self.id)) {
+            let mut files = fs_extra::dir::get_dir_content(format!("./violin_output/packs/{}/RP", &self.id)).unwrap();
+            for file in files.files.iter() {
+                if file.ends_with("manifest.json") {
+                    continue;
+                }
+                fs::remove_file(file).expect("Cannot remove file");
+            }
+        }
         let _ = fs::create_dir_all(format!("./violin_output/packs/{}/BP", &self.id));
         let _ = fs::create_dir_all(format!("./violin_output/packs/{}/RP", &self.id));
 
-        if regenerate_manifests {
+        if !fs::exists(format!("./violin_output/packs/{}/BP/manifest.json", &self.id)).unwrap_or(true) {
             let bp_manifest: String = BpManifestTemplate {
                 name: &self.name.as_str(),
                 author: &self.author.as_str(),
@@ -140,16 +158,16 @@ impl<'a> Pack<'a> {
                 Err(_) => (),
             };
 
-            let _ = match fs::write(
-                format!(
-                    "./{RESULT_FOLDER}/packs/{}/IMPORTANT.MD",
-                    &self.id
-                ),
-                crate::constant::important::IMPORTANTMD,
-            ) {
-                Ok(_) => info("VioletCrystal has generated an IMPORTANT.MD file. Consider checking it before the next run".to_string(), "[ IMPORTANT ]".to_string()),
-                Err(_) => (),
-            };
+            // let _ = match fs::write(
+            //     format!(
+            //         "./{RESULT_FOLDER}/packs/{}/IMPORTANT.MD",
+            //         &self.id
+            //     ),
+            //     crate::constant::important::IMPORTANTMD,
+            // ) {
+            //     Ok(_) => info("VioletCrystal has generated an IMPORTANT.MD file. Consider checking it before the next run".to_string(), "[ IMPORTANT ]".to_string()),
+            //     Err(_) => (),
+            // };
         }
 
         let _ = fs::copy(
@@ -193,7 +211,7 @@ impl<'a> Pack<'a> {
         );
     }
 
-    pub fn register_item_texture(&mut self, texture: ItemAtlasEntry) {
+    pub fn register_item_texture(&mut self, texture: ItemTexture) {
         info(
             format!(
                 "Registering Item Texture \"{}\"",
