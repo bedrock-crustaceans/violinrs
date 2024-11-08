@@ -11,33 +11,50 @@ use std::fs;
 use std::path::PathBuf;
 use std::string::ToString;
 use std::sync::Arc;
-
+use serde_json::Value;
 use crate::block::block_registry::{
     serialize_block_atlas, serialize_terrain_atlas, BlockAtlasTemplate, BlockRegistry,
     TerrainAtlasTemplate,
 };
 use crate::block::Block;
+use crate::image::Image;
+use crate::vio::SemVer;
 use uuid::Uuid;
 
 const RESULT_FOLDER: &str = "violin_output";
 
-pub struct ScriptData<'a> {
-    pub mc_server_version: String,
-    pub mc_server_ui_version: String,
-    pub paired_scripts_folder: &'a str,
+#[derive(Clone)]
+pub struct ScriptData {
+    pub mc_server_version: SemVer,
+    pub mc_server_ui_version: SemVer,
+    pub paired_scripts_folder: String,
 }
 
+impl ScriptData {
+    pub fn new(
+        mc_server_version: SemVer,
+        mc_server_ui_version: SemVer,
+        paired_scripts_folder: impl Into<String>,
+    ) -> Option<Self> {
+        Some(Self {
+            mc_server_version,
+            mc_server_ui_version,
+            paired_scripts_folder: paired_scripts_folder.into(),
+        })
+    }
+}
+
+#[derive(Clone)]
 pub struct Pack<'a> {
     pub name: String,
     pub id: String,
     pub author: String,
-    pub version: &'a str,
+    pub version: SemVer,
     pub description: String,
-    pub use_scripts: bool,
-    pub scripts: &'a Option<ScriptData<'a>>,
-    pub dev_bp_folder: &'a str,
-    pub dev_rp_folder: &'a str,
-    pub icon: &'a str,
+    pub scripts: Option<ScriptData>,
+    pub dev_bp_folder: String,
+    pub dev_rp_folder: String,
+    pub icon: Image,
     pub item_registry: ItemRegistry,
     pub recipes: Vec<Arc<dyn Recipe>>,
     pub block_registry: BlockRegistry<'a>,
@@ -45,32 +62,34 @@ pub struct Pack<'a> {
 
 impl<'a> Pack<'a> {
     pub fn new(
-        name: String,
-        id: String,
-        author: String,
-        version: &'a str,
-        description: String,
-        use_scripts: bool,
-        dev_bp_folder: &'a str,
-        dev_rp_folder: &'a str,
-        icon: &'a str,
-        scripts: &'a Option<ScriptData>,
+        name: impl Into<String> + Clone,
+        id: impl Into<String> + Clone,
+        author: impl Into<String> + Clone,
+        version: SemVer,
+        description: impl Into<String> + Clone,
+        dev_bp_folder: impl Into<String> + Clone,
+        dev_rp_folder: impl Into<String> + Clone,
+        icon: Image,
+        scripts: Option<ScriptData>,
     ) -> Self {
         info(
-            format!("Registering Pack \"{}\"(\"{}\")", name, id),
+            format!(
+                "Registering Pack \"{}\"(\"{}\")",
+                name.clone().into(),
+                id.clone().into()
+            ),
             "[ PACK ]".to_string(),
         );
         let items: ItemRegistry = ItemRegistry::new();
         let pack = Self {
-            name,
-            id,
-            author,
+            name: name.into(),
+            id: id.into(),
+            author: author.into(),
             version,
-            description,
+            description: description.into(),
             scripts,
-            use_scripts,
-            dev_bp_folder,
-            dev_rp_folder,
+            dev_bp_folder: dev_bp_folder.into(),
+            dev_rp_folder: dev_rp_folder.into(),
             icon,
             item_registry: items.clone(),
             recipes: Vec::new(),
@@ -85,106 +104,137 @@ impl<'a> Pack<'a> {
             "[ PACK ]".to_string(),
         );
 
-        if let Ok(content) = fs::read_dir(format!("./violin_output/packs/{}/BP", &self.id)) {
-            let mut files =
-                fs_extra::dir::get_dir_content(format!("./violin_output/packs/{}/BP", &self.id))
-                    .unwrap();
-            for file in files.files.iter() {
-                if file.ends_with("manifest.json") {
-                    continue;
-                }
-                fs::remove_file(file).expect("Cannot remove file");
-            }
-        }
-        if let Ok(content) = fs::read_dir(format!("./violin_output/packs/{}/RP", &self.id)) {
-            let mut files =
-                fs_extra::dir::get_dir_content(format!("./violin_output/packs/{}/RP", &self.id))
-                    .unwrap();
-            for file in files.files.iter() {
-                if file.ends_with("manifest.json") {
-                    continue;
-                }
-                fs::remove_file(file).expect("Cannot remove file");
-            }
-        }
-        let _ = fs::create_dir_all(format!("./violin_output/packs/{}/BP", &self.id));
-        let _ = fs::create_dir_all(format!("./violin_output/packs/{}/RP", &self.id));
+        let mut bp_uuid_1 = Uuid::new_v4().to_string();
+        let mut bp_uuid_2 = Uuid::new_v4().to_string();
+        let mut bp_uuid_3 = Uuid::new_v4().to_string();
+        let mut rp_uuid_1 = Uuid::new_v4().to_string();
+        let mut rp_uuid_2 = Uuid::new_v4().to_string();
 
-        if !fs::exists(format!(
-            "./violin_output/packs/{}/BP/manifest.json",
+        if fs::exists(format!(
+            "./violin_output/packs/{}/RP/manifest.json",
             &self.id
         ))
-        .unwrap_or(true)
-        {
-            let bp_manifest: String = BpManifestTemplate {
-                name: &self.name.as_str(),
-                author: &self.author.as_str(),
-                description: &self.description.as_str(),
-                use_scripts: &self.use_scripts,
-                uuid_1: Uuid::new_v4().to_string().as_str(),
-                uuid_2: Uuid::new_v4().to_string().as_str(),
-                uuid_3: Uuid::new_v4().to_string().as_str(),
-                server_ui_version: match &self.scripts {
-                    Some(scripts) => scripts.mc_server_ui_version.as_str(),
-                    None => "0.0.0",
-                },
-                server_version: match &self.scripts {
-                    Some(scripts) => scripts.mc_server_version.as_str(),
-                    None => "0.0.0",
-                },
-                version: &self.version,
-            }
-            .render()
-            .unwrap();
-            match fs::write(
-                format!("./{RESULT_FOLDER}/packs/{}/BP/manifest.json", &self.id),
-                bp_manifest,
-            ) {
-                Ok(_) => (),
-                Err(_) => (),
-            };
+            .unwrap_or(false) {
+            let v: Value = serde_json::from_str(fs::read_to_string(format!(
+                "./{RESULT_FOLDER}/packs/{}/RP/manifest.json",
+                &self.id
+            )).unwrap().as_str()).unwrap();
 
-            let rp_manifest: String = RpManifestTemplate {
-                name: &self.name.as_str(),
-                author: &self.author.as_str(),
-                description: &self.description.as_str(),
-                uuid_1: Uuid::new_v4().to_string().as_str(),
-                uuid_2: Uuid::new_v4().to_string().as_str(),
-                version: &self.version,
-            }
-            .render()
-            .unwrap();
-            match fs::write(
-                format!("./{RESULT_FOLDER}/packs/{}/RP/manifest.json", &self.id),
-                rp_manifest,
-            ) {
-                Ok(_) => (),
-                Err(_) => (),
-            };
-
-            // let _ = match fs::write(
-            //     format!(
-            //         "./{RESULT_FOLDER}/packs/{}/IMPORTANT.MD",
-            //         &self.id
-            //     ),
-            //     crate::constant::important::IMPORTANTMD,
-            // ) {
-            //     Ok(_) => info("VioletCrystal has generated an IMPORTANT.MD file. Consider checking it before the next run".to_string(), "[ IMPORTANT ]".to_string()),
-            //     Err(_) => (),
-            // };
+            rp_uuid_1 = v["header"]["uuid"].as_str().unwrap().to_string();
+            rp_uuid_2 = v["modules"][0]["uuid"].as_str().unwrap().to_string();
         }
 
-        let _ = fs::copy(
-            &self.icon,
-            format!("./{RESULT_FOLDER}/packs/{}/BP/pack_icon.png", &self.id),
-        );
+        if fs::exists(format!(
+            "./{RESULT_FOLDER}/packs/{}/BP/manifest.json",
+            &self.id
+        ))
+            .unwrap_or(false) {
+            let v: Value = serde_json::from_str(fs::read_to_string(format!(
+                "./{RESULT_FOLDER}/packs/{}/BP/manifest.json",
+                &self.id
+            )).unwrap().as_str()).unwrap();
 
-        let _ = fs::copy(
-            &self.icon,
-            format!("./{RESULT_FOLDER}/packs/{}/RP/pack_icon.png", &self.id),
-        );
+            bp_uuid_1 = v["header"]["uuid"].as_str().unwrap().to_string();
+            bp_uuid_2 = v["modules"][0]["uuid"].as_str().unwrap().to_string();
+            if self.scripts.is_some() {
+                bp_uuid_3 = v["modules"][1]["uuid"].as_str().unwrap_or("NULL").to_string();
+            }
+        }
 
-        if self.use_scripts {
+
+        if let Ok(content) = fs::read_dir(format!("./{RESULT_FOLDER}/packs/{}/BP", &self.id)) {
+            let mut files =
+                fs_extra::dir::get_dir_content(format!("./{RESULT_FOLDER}/packs/{}/BP", &self.id))
+                    .unwrap();
+            for file in files.files.iter() {
+                // if file.ends_with("manifest.json") {
+                //     continue;
+                // }
+                fs::remove_file(file).expect("Cannot remove file");
+            }
+        }
+        if let Ok(content) = fs::read_dir(format!("./{RESULT_FOLDER}/packs/{}/RP", &self.id)) {
+            let mut files =
+                fs_extra::dir::get_dir_content(format!("./{RESULT_FOLDER}/packs/{}/RP", &self.id))
+                    .unwrap();
+            for file in files.files.iter() {
+                if file.ends_with("manifest.json") {
+                    continue;
+                }
+                fs::remove_file(file).expect("Cannot remove file");
+            }
+        }
+
+        let _ = fs::create_dir_all(format!("./{RESULT_FOLDER}/packs/{}/BP", &self.id));
+        let _ = fs::create_dir_all(format!("./{RESULT_FOLDER}/packs/{}/RP", &self.id));
+
+        let bp_manifest: String = BpManifestTemplate {
+            name: &self.name.as_str(),
+            author: &self.author.as_str(),
+            description: &self.description.as_str(),
+            use_scripts: &self.scripts.is_some(),
+            uuid_1: bp_uuid_1.clone().as_str(),
+            uuid_2: bp_uuid_2.clone().as_str(),
+            uuid_3: bp_uuid_3.clone().as_str(),
+            server_ui_version: match &self.scripts {
+                Some(scripts) => scripts.mc_server_ui_version.clone().render(),
+                None => "0.0.0".to_string(),
+            },
+            server_version: match &self.scripts {
+                Some(scripts) => scripts.mc_server_version.clone().render(),
+                None => "0.0.0".to_string(),
+            },
+            version: &self.version.render_commas(),
+        }
+        .render()
+        .unwrap();
+        match fs::write(
+            format!("./{RESULT_FOLDER}/packs/{}/BP/manifest.json", &self.id),
+            bp_manifest,
+        ) {
+            Ok(_) => (),
+            Err(_) => (),
+        };
+
+        let rp_manifest: String = RpManifestTemplate {
+            name: &self.name.as_str(),
+            author: &self.author.as_str(),
+            description: &self.description.as_str(),
+            uuid_1: rp_uuid_1.as_str(),
+            uuid_2: rp_uuid_2.as_str(),
+            version: &self.version.render_commas(),
+        }
+        .render()
+        .unwrap();
+        match fs::write(
+            format!("./{RESULT_FOLDER}/packs/{}/RP/manifest.json", &self.id),
+            rp_manifest,
+        ) {
+            Ok(_) => (),
+            Err(_) => (),
+        };
+
+        // let _ = match fs::write(
+        //     format!(
+        //         "./{RESULT_FOLDER}/packs/{}/IMPORTANT.MD",
+        //         &self.id
+        //     ),
+        //     crate::constant::important::IMPORTANTMD,
+        // ) {
+        //     Ok(_) => info("VioletCrystal has generated an IMPORTANT.MD file. Consider checking it before the next run".to_string(), "[ IMPORTANT ]".to_string()),
+        //     Err(_) => (),
+        // };
+
+        self.icon.build(PathBuf::from(format!(
+            "./{RESULT_FOLDER}/packs/{}/BP/pack_icon.png",
+            &self.id
+        )));
+        self.icon.build(PathBuf::from(format!(
+            "./{RESULT_FOLDER}/packs/{}/RP/pack_icon.png",
+            &self.id
+        )));
+
+        if self.scripts.is_some() {
             self.pair_scripts();
         }
 
@@ -299,7 +349,6 @@ impl<'a> Pack<'a> {
 
         let _ = fs::create_dir_all(format!("{}/{}_BP", &self.dev_bp_folder, &self.id));
         let _ = fs::create_dir_all(format!("{}/{}_RP", &self.dev_rp_folder, &self.id));
-
 
         info(
             format!("Copying {}'s BP to DevBPFolder", &self.id),

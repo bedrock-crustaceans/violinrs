@@ -1,5 +1,5 @@
 use hsl::HSL;
-use image::{ImageBuffer, Pixel, Rgb, RgbImage, Rgba, RgbaImage};
+use image::{GenericImage, ImageBuffer, Pixel, Rgb, RgbImage, Rgba, RgbaImage};
 use std::path::PathBuf;
 
 #[derive(Clone)]
@@ -50,5 +50,34 @@ impl Image {
         hsl.h += amount;
         let (r, g, b) = hsl.to_rgb();
         Rgba::from([r, g, b, fa.clone()])
+    }
+
+    pub fn upscaled(&self, amount: u32) -> Self {
+        let mut upscaled = self.clone();
+
+        let mut img = upscaled.img;
+
+        let mut buf = RgbaImage::new(
+            img.width() * amount,
+            img.height() * amount,
+        );
+
+        for (ox, oy, color) in img.enumerate_pixels() {
+            for y in 0..amount {
+                for x in 0..amount {
+                    buf.put_pixel(
+                        ox * amount + x,
+                        oy * amount + y,
+                        color.clone()
+                    );
+                }
+            }
+        }
+
+        Self {
+            source: self.source.clone(),
+            img: buf,
+            hue_shift: self.hue_shift,
+        }
     }
 }

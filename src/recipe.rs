@@ -138,7 +138,7 @@ pub struct FurnaceRecipe {
     pub id: Identifier,
     pub tags: Vec<String>,
     pub input: RecipeIO,
-    pub output: Identifier
+    pub output: Identifier,
 }
 impl Recipe for FurnaceRecipe {
     fn serialize(&self) -> String {
@@ -223,7 +223,7 @@ impl ShapelessRecipe {
             id,
             tags: vec![],
             ingredients: vec![],
-            result
+            result,
         }
     }
 

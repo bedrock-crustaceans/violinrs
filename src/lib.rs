@@ -26,26 +26,7 @@ mod tests {
         pack::{Pack, ScriptData},
     };
 
-    #[test]
-    fn main() {
-        let scripts = Some(ScriptData {
-            mc_server_ui_version: "1.3.0".to_string(),
-            mc_server_version: "1.14.0".to_string(),
-            paired_scripts_folder: r"./src-scripts",
-        }); // Script Data. Can be set to None if project doesn't use scripts
-        let mut pack = Pack::new(
-            "Violin RS Tests !".to_string(), // Pack Name
-            "Violin RS Tests".to_string(),   // Pack Identifier
-            "NaKeR".to_string(),             // Pack Author
-            "1, 0, 0",                       // Pack Version. Separated with commas
-            "Nothing here".to_string(),      // Pack Description
-            true,                            // Does the project use scripts
-            r"C:\Users\narol\AppData\Local\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\development_behavior_packs", // Developer BP Folder
-            r"C:\Users\narol\AppData\Local\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\development_resource_packs", // Developer RP Folder
-            r"./textures/diamond_sword.png", // Pack Icon
-            &scripts,                        // Script Data which we defined earlier
-        );
-
+    fn register_items(pack: &mut Pack) {
         pack.register_item_texture(ItemTexture::new(
             "violin_amethyst_sword",
             "amethyst_sword",
@@ -92,56 +73,69 @@ mod tests {
                 ])
                 .using_format_version(SemVer::new(1, 21, 20)),
         );
+    }
 
-        pack.register_recipe(ShapedRecipe::new(
-            Identifier::new("violin", "emerald_sword_recipe"),
-            RecipeIO::new_typed(Identifier::new("violin", "emerald_sword")).using_count(1),
-        ).using_ingredients(
-            vec![
-                RecipeIO::new_typed(Identifier::new("minecraft", "stick")).using_key('S'),
-                RecipeIO::new_typed(Identifier::new("minecraft", "emerald")).using_key('E')
-            ]
-        ).using_pattern(
-            vec![
-                "E",
-                "E",
-                "S"
-            ]
-        ).using_tags(
-            vec![
-                "crafting_table"
-            ]
-        ).build());
-
-        pack.register_recipe(ShapelessRecipe::new(
-            Identifier::new("violin", "amethyst_sword_recipe"),
-            RecipeIO::new_typed(Identifier::new("violin", "amethyst_sword")).using_count(1),
-        ).using_ingredients(
-            vec![
+    fn register_recipes(pack: &mut Pack) {
+        pack.register_recipe(
+            ShapedRecipe::new(
+                Identifier::new("violin", "emerald_sword_recipe"),
                 RecipeIO::new_typed(Identifier::new("violin", "emerald_sword")).using_count(1),
-                RecipeIO::new_typed(Identifier::new("minecraft", "amethyst_shard")).using_count(8)
-            ]
-        ).using_tags(
-            vec![
-                "crafting_table"
-            ]
-        ).build());
+            )
+            .using_ingredients(vec![
+                RecipeIO::new_typed(Identifier::new("minecraft", "stick")).using_key('S'),
+                RecipeIO::new_typed(Identifier::new("minecraft", "emerald")).using_key('E'),
+            ])
+            .using_pattern(vec!["E", "E", "S"])
+            .using_tags(vec!["crafting_table"])
+            .build(),
+        );
+
+        pack.register_recipe(
+            ShapelessRecipe::new(
+                Identifier::new("violin", "amethyst_sword_recipe"),
+                RecipeIO::new_typed(Identifier::new("violin", "amethyst_sword")).using_count(1),
+            )
+            .using_ingredients(vec![
+                RecipeIO::new_typed(Identifier::new("violin", "emerald_sword")).using_count(1),
+                RecipeIO::new_typed(Identifier::new("minecraft", "amethyst_shard")).using_count(8),
+            ])
+            .using_tags(vec!["crafting_table"])
+            .build(),
+        );
 
         pack.register_recipe(
             FurnaceRecipe::new(
                 Identifier::new("violin", "amethyst_sword_to_ab"),
                 RecipeIO::new_typed(Identifier::new("violin", "amethyst_sword")),
-                Identifier::new("minecraft", "amethyst_block")
+                Identifier::new("minecraft", "amethyst_block"),
             )
-                .using_tags(
-                    vec![
-                        "furnace"
-                    ]
-                ).build()
+            .using_tags(vec!["furnace"])
+            .build(),
+        );
+    }
+
+    #[test]
+    fn main() {
+        let mut pack = Pack::new(
+            "Violin RS Tests !",
+            "Violin RS Tests",
+            "NaKeR",
+            SemVer::new(1, 0, 0),
+            "Nothing here",
+            r"C:\Users\narol\AppData\Local\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\development_behavior_packs", // Developer BP Folder
+            r"C:\Users\narol\AppData\Local\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\development_resource_packs", // Developer RP Folder
+            Image::new(r"./textures/diamond_sword.png").with_hue_shift(120.0).upscaled(16),
+            ScriptData::new(
+                SemVer::new_beta(1, 14, 0),
+                SemVer::new(1, 3, 0),
+                r"./src-scripts",
+            ),
         );
 
+        register_items(&mut pack);
+        register_recipes(&mut pack);
 
         pack.generate();
-        pack.build_to_dev();
+        // pack.build_to_dev();
     }
 }

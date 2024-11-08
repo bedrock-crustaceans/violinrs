@@ -42,6 +42,7 @@ pub struct SemVer {
     major: i32,
     minor: i32,
     patch: i32,
+    beta: bool,
 }
 
 impl SemVer {
@@ -50,10 +51,35 @@ impl SemVer {
             major,
             minor,
             patch,
+            beta: false,
+        }
+    }
+
+    pub fn new_beta(major: i32, minor: i32, patch: i32) -> Self {
+        Self {
+            major,
+            minor,
+            patch,
+            beta: true,
         }
     }
 
     pub fn render(&self) -> String {
-        format!("{}.{}.{}", self.major, self.minor, self.patch)
+        format!(
+            "{}.{}.{}{}",
+            self.major,
+            self.minor,
+            self.patch,
+            if self.beta { "-beta" } else { "" }
+        )
+    }
+
+    pub fn render_commas(&self) -> String {
+        format!(
+            "{}, {}, {}",
+            self.major,
+            self.minor,
+            self.patch,
+        )
     }
 }

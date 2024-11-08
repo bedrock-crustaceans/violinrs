@@ -10,8 +10,8 @@ pub struct BpManifestTemplate<'a> {
     pub uuid_2: &'a str,
     pub uuid_3: &'a str,
     pub use_scripts: &'a bool,
-    pub server_version: &'a str,
-    pub server_ui_version: &'a str,
+    pub server_version: String,
+    pub server_ui_version: String,
     pub version: &'a str,
 }
 
