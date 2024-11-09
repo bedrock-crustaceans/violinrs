@@ -26,9 +26,16 @@ impl Identifier {
     }
 }
 
-pub struct Pair<T, K> {
+#[derive(Clone)]
+pub struct Pair<T: Clone, K: Clone> {
     pub first: T,
     pub second: K,
+}
+
+impl<T: Clone, K: Clone> Pair<T, K> {
+    pub fn new(first: T, second: K) -> Self {
+        Self { first, second }
+    }
 }
 
 pub trait Buildable: Clone {

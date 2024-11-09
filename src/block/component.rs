@@ -1,6 +1,6 @@
 use askama::Template;
 
-use crate::vio::{Pair, Vec3};
+use crate::vio::{Buildable, Identifier, Pair, Vec3};
 
 pub trait BlockComponent {
     fn serialize(&self) -> String;
@@ -8,10 +8,39 @@ pub trait BlockComponent {
 
 // * BlockCollisionBoxComponent
 
+#[derive(Clone)]
 pub struct BlockCollisionBoxComponent {
     pub enabled: bool,
     pub origin: Option<Vec3>,
     pub size: Option<Vec3>,
+}
+
+impl Buildable for BlockCollisionBoxComponent {}
+
+impl BlockCollisionBoxComponent {
+    pub fn new(enabled: bool) -> Self {
+        Self {
+            enabled,
+            origin: None,
+            size: None
+        }
+    }
+
+    pub fn with_origin(&mut self, origin: Vec3) -> Self {
+        let mut c = self.clone();
+
+        c.origin = Some(origin);
+
+        c
+    }
+
+    pub fn with_size(&mut self, size: Vec3) -> Self {
+        let mut c = self.clone();
+
+        c.size = Some(size);
+
+        c
+    }
 }
 
 #[derive(Template)]
@@ -78,9 +107,21 @@ impl BlockComponent for BlockCollisionBoxComponent {
 
 // * BlockCraftingTableBoxComponent
 
-pub struct BlockCraftingTableComponent<'a> {
-    pub name: &'a str,
-    pub tags: Vec<&'a str>,
+#[derive(Clone)]
+pub struct BlockCraftingTableComponent {
+    pub name: String,
+    pub tags: Vec<String>,
+}
+
+impl Buildable for BlockCraftingTableComponent {}
+
+impl BlockCraftingTableComponentTemplate {
+    pub fn new(name: impl Into<String>, tags: Vec<impl Into<String>>) -> Self {
+        Self {
+            name: name.into(),
+            tags: tags.into_iter().map(|t| t.into()).collect(),
+        }
+    }
 }
 
 #[derive(Template)]
@@ -93,7 +134,7 @@ struct BlockCraftingTableComponentTemplate {
     tags: String,
 }
 
-impl<'a> BlockComponent for BlockCraftingTableComponent<'a> {
+impl BlockComponent for BlockCraftingTableComponent {
     fn serialize(&self) -> String {
         let tags = format!("{:?}", self.tags);
         BlockCraftingTableComponentTemplate {
@@ -107,8 +148,25 @@ impl<'a> BlockComponent for BlockCraftingTableComponent<'a> {
 
 // * BlockDestructibleByExplosionComponent
 
+#[derive(Clone)]
 pub struct BlockDestructibleByExplosionComponent {
     pub explosion_resistance: Option<f64>,
+}
+
+impl Buildable for BlockDestructibleByExplosionComponent {}
+
+impl BlockDestructibleByExplosionComponent {
+    pub fn new(explosion_resistance: f64) -> Self {
+        Self {
+            explosion_resistance: Some(explosion_resistance)
+        }
+    }
+
+    pub fn not_resistant() -> Self {
+        Self {
+            explosion_resistance: None
+        }
+    }
 }
 
 #[derive(Template)]
@@ -132,8 +190,25 @@ impl BlockComponent for BlockDestructibleByExplosionComponent {
 
 // * BlockDestructibleByMiningComponent
 
+#[derive(Clone)]
 pub struct BlockDestructibleByMiningComponent {
     pub seconds_to_destroy: Option<f64>,
+}
+
+impl Buildable for BlockDestructibleByMiningComponent {}
+
+impl BlockDestructibleByMiningComponent {
+    pub fn new(seconds_to_destroy: f64) -> Self {
+        Self {
+            seconds_to_destroy: Some(seconds_to_destroy)
+        }
+    }
+
+    pub fn instant_mine() -> Self {
+        Self {
+            seconds_to_destroy: None
+        }
+    }
 }
 
 #[derive(Template)]
@@ -157,8 +232,19 @@ impl BlockComponent for BlockDestructibleByMiningComponent {
 
 // * BlockCustomComponents
 
-pub struct BlockCustomComponents<'a> {
-    pub components: Vec<&'a str>,
+#[derive(Clone)]
+pub struct BlockCustomComponents {
+    pub components: Vec<Identifier>,
+}
+
+impl Buildable for BlockCustomComponents {}
+
+impl BlockCustomComponents {
+    pub fn new(components: Vec<Identifier>) -> Self {
+        Self {
+            components
+        }
+    }
 }
 
 #[derive(Template)]
@@ -170,10 +256,11 @@ struct BlockCustomComponentsTemplate {
     pub components: String,
 }
 
-impl BlockComponent for BlockCustomComponents<'_> {
+impl BlockComponent for BlockCustomComponents {
     fn serialize(&self) -> String {
+        let components_serialized: Vec<String> = self.components.iter().map(|x| x.render()).collect();
         BlockCustomComponentsTemplate {
-            components: format!("{:?}", self.components),
+            components: format!("{:?}", components_serialized),
         }
         .render()
         .unwrap()
@@ -182,8 +269,9 @@ impl BlockComponent for BlockCustomComponents<'_> {
 
 // * BlockDisplayNameComponent
 
-pub struct BlockDisplayNameComponent<'a> {
-    pub value: &'a str,
+#[derive(Clone)]
+pub struct BlockDisplayNameComponent {
+    pub value: String,
 }
 
 #[derive(Template)]
@@ -195,10 +283,20 @@ struct BlockDisplayNameComponentTemplate {
     pub value: String,
 }
 
-impl BlockComponent for BlockDisplayNameComponent<'_> {
+impl Buildable for BlockDisplayNameComponent {}
+
+impl BlockDisplayNameComponent {
+    pub fn new(value: impl Into<String>) -> Self {
+        Self {
+            value: value.into(),
+        }
+    }
+}
+
+impl BlockComponent for BlockDisplayNameComponent {
     fn serialize(&self) -> String {
         BlockDisplayNameComponentTemplate {
-            value: self.value.to_string(),
+            value: self.value.clone(),
         }
         .render()
         .unwrap()
@@ -207,16 +305,26 @@ impl BlockComponent for BlockDisplayNameComponent<'_> {
 
 // * BlockFlammableComponent
 
+#[derive(Clone)]
 pub struct BlockFlammableComponent {
     pub catch_chance_modifier: i32,
     pub destroy_chance_modifier: i32,
 }
+
+impl Buildable for BlockFlammableComponent {}
 
 impl BlockFlammableComponent {
     pub fn default() -> Self {
         Self {
             catch_chance_modifier: 5,
             destroy_chance_modifier: 20,
+        }
+    }
+
+    pub fn new(catch_chance_modifier: i32, destroy_chance_modifier: i32) -> Self {
+        Self {
+            catch_chance_modifier,
+            destroy_chance_modifier
         }
     }
 }
@@ -244,6 +352,7 @@ impl BlockComponent for BlockFlammableComponent {
 
 // * BlockFrictionComponent
 
+#[derive(Clone)]
 pub struct BlockFrictionComponent {
     pub friction: f64,
 }
@@ -255,6 +364,16 @@ pub struct BlockFrictionComponent {
 )]
 struct BlockFrictionComponentTemplate {
     pub friction: f64,
+}
+
+impl Buildable for BlockFrictionComponent {}
+
+impl BlockFrictionComponent {
+    pub fn new(friction: f64) -> Self {
+        Self {
+            friction
+        }
+    }
 }
 
 impl BlockComponent for BlockFrictionComponent {
@@ -269,9 +388,10 @@ impl BlockComponent for BlockFrictionComponent {
 
 // * BlockGeometryComponent
 
-pub struct BlockGeometryComponent<'a> {
-    pub id: &'a str,
-    pub bone_visibility: Vec<Pair<&'a str, bool>>,
+#[derive(Clone)]
+pub struct BlockGeometryComponent {
+    pub id: String,
+    pub bone_visibility: Vec<Pair<String, bool>>,
 }
 
 #[derive(Template)]
@@ -284,7 +404,26 @@ struct BlockGeometryComponentTemplate {
     bone_visibility: String,
 }
 
-impl BlockComponent for BlockGeometryComponent<'_> {
+impl Buildable for BlockGeometryComponent {}
+
+impl BlockGeometryComponent {
+    pub fn new(id: impl Into<String>) -> Self {
+        Self {
+            id: id.into(),
+            bone_visibility: vec![],
+        }
+    }
+
+    pub fn using_bone_visibility(&mut self, bone_visibility: Vec<Pair<String, bool>>) -> Self {
+        let mut c = self.clone();
+
+        c.bone_visibility = bone_visibility;
+
+        c
+    }
+}
+
+impl BlockComponent for BlockGeometryComponent {
     fn serialize(&self) -> String {
         let mut bv = String::from("");
 
@@ -305,6 +444,7 @@ impl BlockComponent for BlockGeometryComponent<'_> {
 
 // * BlockLightDampeningComponent
 
+#[derive(Clone)]
 pub struct BlockLightDampeningComponent {
     pub value: i32,
 }
@@ -318,6 +458,16 @@ struct BlockLightDampeningComponentTemplate {
     pub value: i32,
 }
 
+impl Buildable for BlockLightDampeningComponent {}
+
+impl BlockLightDampeningComponent {
+    pub fn new(value: i32) -> Self {
+        Self {
+            value
+        }
+    }
+}
+
 impl BlockComponent for BlockLightDampeningComponent {
     fn serialize(&self) -> String {
         BlockLightDampeningComponentTemplate { value: self.value }
@@ -328,6 +478,7 @@ impl BlockComponent for BlockLightDampeningComponent {
 
 // * BlockLightDampeningComponent
 
+#[derive(Clone)]
 pub struct BlockLightEmissionComponent {
     pub value: i32,
 }
@@ -341,6 +492,16 @@ struct BlockLightEmissionComponentTemplate {
     pub value: i32,
 }
 
+impl Buildable for BlockLightEmissionComponent {}
+
+impl BlockLightEmissionComponent {
+    pub fn new(value: i32) -> Self {
+        Self {
+            value
+        }
+    }
+}
+
 impl BlockComponent for BlockLightEmissionComponent {
     fn serialize(&self) -> String {
         BlockLightEmissionComponentTemplate { value: self.value }
@@ -351,8 +512,9 @@ impl BlockComponent for BlockLightEmissionComponent {
 
 // * BlockLootComponent
 
-pub struct BlockLootComponent<'a> {
-    pub path: &'a str,
+#[derive(Clone)]
+pub struct BlockLootComponent {
+    pub path: String,
 }
 
 #[derive(Template)]
@@ -364,10 +526,20 @@ struct BlockLootComponentTemplate {
     pub path: String,
 }
 
-impl BlockComponent for BlockLootComponent<'_> {
+impl Buildable for BlockLootComponent {}
+
+impl BlockLootComponent {
+    pub fn new(path: impl Into<String>) -> Self {
+        Self {
+            path: path.into(),
+        }
+    }
+}
+
+impl BlockComponent for BlockLootComponent {
     fn serialize(&self) -> String {
         BlockLootComponentTemplate {
-            path: self.path.to_string(),
+            path: self.path.clone(),
         }
         .render()
         .unwrap()
@@ -376,8 +548,19 @@ impl BlockComponent for BlockLootComponent<'_> {
 
 // * BlockMapColorComponent
 
-pub struct BlockMapColorComponent<'a> {
-    pub color: &'a str,
+#[derive(Clone)]
+pub struct BlockMapColorComponent {
+    pub color: String,
+}
+
+impl Buildable for BlockMapColorComponent {}
+
+impl BlockMapColorComponent {
+    pub fn new(color: impl Into<String>) -> Self {
+        Self {
+            color: color.into(),
+        }
+    }
 }
 
 #[derive(Template)]
@@ -389,10 +572,10 @@ struct BlockMapColorComponentTemplate {
     pub color: String,
 }
 
-impl BlockComponent for BlockMapColorComponent<'_> {
+impl BlockComponent for BlockMapColorComponent {
     fn serialize(&self) -> String {
         BlockMapColorComponentTemplate {
-            color: self.color.to_string(),
+            color: self.color.clone(),
         }
         .render()
         .unwrap()

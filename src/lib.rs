@@ -25,6 +25,8 @@ mod tests {
         },
         pack::{Pack, ScriptData},
     };
+    use crate::block::Block;
+    use crate::block::component::BlockLightEmissionComponent;
 
     fn register_items(pack: &mut Pack) {
         pack.register_item_texture(ItemTexture::new(
@@ -135,6 +137,17 @@ mod tests {
 
         register_items(&mut pack);
         register_recipes(&mut pack);
+
+        pack.register_block(Block {
+            type_id: Identifier::new("violin", "test"),
+            components: vec![
+                BlockLightEmissionComponent::new(14).build()
+            ],
+            texture_set: String::from("./textures/diamond_sword.png"),
+            sound: String::from("stone"),
+            permutations: vec![],
+            states: vec![],
+        });
 
         pack.generate();
         pack.build_to_dev();

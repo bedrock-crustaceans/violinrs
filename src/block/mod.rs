@@ -3,7 +3,7 @@ use crate::block::permutation::BlockPermutation;
 use crate::block::state::BlockState;
 use crate::vio::Identifier;
 use askama::Template;
-use std::sync::Mutex;
+use std::sync::Arc;
 
 pub mod block_registry;
 pub mod component;
@@ -14,7 +14,7 @@ pub mod state;
 #[derive(Clone)]
 pub struct Block<'a> {
     pub type_id: Identifier,
-    pub components: Vec<&'a dyn BlockComponent>,
+    pub components: Vec<Arc<dyn BlockComponent>>,
     pub permutations: Vec<BlockPermutation<'a>>,
     pub states: Vec<&'a dyn BlockState>,
     pub texture_set: String,
@@ -26,12 +26,7 @@ impl<'a> Block<'a> {
         let components = self.components.clone();
         let mut components_strings: Vec<String> = vec![];
         for component in components {
-            let comp = Mutex::new(component);
-            let ser = comp.lock();
-            let mut fser = match ser {
-                Ok(guard) => guard.serialize(),
-                Err(_) => "Error serializing".to_string(),
-            };
+            let mut fser = component.serialize();
             fser.push(',');
             components_strings.push(fser);
         }
@@ -61,6 +56,7 @@ impl<'a> Block<'a> {
         .render()
         .unwrap()
     }
+
 }
 
 #[derive(Template)]
