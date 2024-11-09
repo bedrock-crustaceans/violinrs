@@ -42,11 +42,12 @@ mod tests {
                     ItemIconComponent::new("violin_amethyst_sword").build(),
                     ItemHandEquippedComponent::new(true).build(),
                     ItemMaxStackValueComponent::new(1).build(),
-                    ItemAllowOffHandComponent::new(true).build(), // ItemCustomComponents::new(
-                                                                  //     vec![
-                                                                  //         Identifier::new("violin", "amethyst_sword")
-                                                                  //     ]
-                                                                  // ).build(),
+                    ItemAllowOffHandComponent::new(true).build(),
+                    ItemCustomComponents::new(
+                        vec![
+                            Identifier::new("vio", "amethyst_sword")
+                        ]
+                    ).build()
                 ])
                 .using_format_version(SemVer::new(1, 21, 20)),
         );
@@ -117,16 +118,16 @@ mod tests {
     #[test]
     fn main() {
         let mut pack = Pack::new(
-            "Violin RS Tests !",
-            "Violin RS Tests",
+            "Light-Elytra Booster",
+            "light-elytra-booster",
             "NaKeR",
             SemVer::new(1, 0, 0),
-            "Nothing here",
+            "Official add-on made using Violin.rs",
             r"C:\Users\narol\AppData\Local\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\development_behavior_packs", // Developer BP Folder
             r"C:\Users\narol\AppData\Local\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\development_resource_packs", // Developer RP Folder
             Image::new(r"./textures/diamond_sword.png").with_hue_shift(120.0).upscaled(16),
             ScriptData::new(
-                SemVer::new_beta(1, 14, 0),
+                SemVer::new(1, 14, 0),
                 SemVer::new(1, 3, 0),
                 r"./src-scripts",
             ),
@@ -136,6 +137,6 @@ mod tests {
         register_recipes(&mut pack);
 
         pack.generate();
-        // pack.build_to_dev();
+        pack.build_to_dev();
     }
 }

@@ -372,19 +372,18 @@ impl<'a> Pack<'a> {
 
     pub fn pair_scripts(&self) {
         let _ = fs::create_dir_all(format!("./{RESULT_FOLDER}/packs/{}/BP/scripts/", &self.id));
-        // let path = self.scripts.as_ref().unwrap().paired_scripts_folder;
-        // let _ = fs_extra::dir::copy(
-        //     path,
-        //     format!("./{RESULT_FOLDER}/packs/{}/BP/scripts/", &self.id),
-        //     &fs_extra::dir::CopyOptions::new()
-        //         .overwrite(true)
-        //         .content_only(true),
-        // );
-        // TODO
-        // info(
-        //     format!("Paired scripts from folder {}", path),
-        //     "[ SCRIPTS ]".to_string(),
-        // )
+        let path = self.scripts.clone().unwrap().paired_scripts_folder;
+        let _ = fs_extra::dir::copy(
+            path.clone(),
+            format!("./{RESULT_FOLDER}/packs/{}/BP/scripts/", &self.id),
+            &fs_extra::dir::CopyOptions::new()
+                .overwrite(true)
+                .content_only(true),
+        );
+        info(
+            format!("Paired scripts from folder {}", path),
+            "[ SCRIPTS ]".to_string(),
+        )
     }
 
     fn generate_recipes(&self) {
