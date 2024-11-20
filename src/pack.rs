@@ -12,14 +12,13 @@ use std::path::PathBuf;
 use std::string::ToString;
 use std::sync::Arc;
 use serde_json::Value;
-use crate::block::block_registry::{
-    serialize_block_atlas, serialize_terrain_atlas, BlockAtlasTemplate, BlockRegistry,
-    TerrainAtlasTemplate,
-};
+use crate::block::block_registry::{serialize_block_atlas, serialize_terrain_atlas, BlockAtlasEntry, BlockAtlasTemplate, BlockRegistry, TerrainAtlasEntry, TerrainAtlasTemplate};
 use crate::block::Block;
 use crate::image::Image;
+use crate::block::block_registry::BlockTexture;
 use crate::vio::SemVer;
 use uuid::Uuid;
+use crate::localization::Localization;
 
 const RESULT_FOLDER: &str = "violin_output";
 
@@ -45,22 +44,23 @@ impl ScriptData {
 }
 
 #[derive(Clone)]
-pub struct Pack<'a> {
-    pub name: String,
-    pub id: String,
-    pub author: String,
-    pub version: SemVer,
-    pub description: String,
-    pub scripts: Option<ScriptData>,
-    pub dev_bp_folder: String,
-    pub dev_rp_folder: String,
-    pub icon: Image,
-    pub item_registry: ItemRegistry,
-    pub recipes: Vec<Arc<dyn Recipe>>,
-    pub block_registry: BlockRegistry<'a>,
+pub struct Pack {
+    name: String,
+    id: String,
+    author: String,
+    version: SemVer,
+    description: String,
+    scripts: Option<ScriptData>,
+    dev_bp_folder: String,
+    dev_rp_folder: String,
+    icon: Image,
+    item_registry: ItemRegistry,
+    recipes: Vec<Arc<dyn Recipe>>,
+    block_registry: BlockRegistry,
+    localizations: Vec<Localization>
 }
 
-impl<'a> Pack<'a> {
+impl Pack {
     pub fn new(
         name: impl Into<String> + Clone,
         id: impl Into<String> + Clone,
@@ -94,6 +94,7 @@ impl<'a> Pack<'a> {
             item_registry: items.clone(),
             recipes: Vec::new(),
             block_registry: BlockRegistry::new(),
+            localizations: Vec::new()
         };
         pack
     }
@@ -241,6 +242,7 @@ impl<'a> Pack<'a> {
         self.generate_items();
         self.generate_blocks();
         self.generate_recipes();
+        self.generate_localizations();
     }
 
     pub fn register_recipe<'b>(&mut self, recipe: Arc<dyn Recipe>) {
@@ -268,6 +270,32 @@ impl<'a> Pack<'a> {
             "[ ITEM ][ TEXTURE ]".to_string(),
         );
         self.item_registry.add_texture(texture);
+    }
+
+    pub fn register_block_texture(&mut self, texture: BlockTexture) {
+        info(
+            format!(
+                "Registering Block Texture \"{}\"",
+                texture.clone().texture_name()
+            ),
+            "[ BLOCK ][ TEXTURE ]".to_string(),
+        );
+        self.block_registry.add_texture(texture.clone());
+        self.block_registry.add_terrain_atlas_entry(TerrainAtlasEntry {
+            id: texture.id().clone().render(),
+            texture_path: format!("textures/blocks/{}.png", texture.texture_name())
+        });
+    }
+
+    pub fn register_block_atlas_entry(&mut self, entry: Arc<dyn BlockAtlasEntry>) {
+        self.block_registry.block_atlas.push(entry.clone());
+        info(
+            format!(
+                "Registering Block Atlas Entry for \"{}\"",
+                entry.id().clone().render()
+            ),
+            "[ BLOCK ][ TEXTURE ]".to_string(),
+        );
     }
 
     fn generate_items(&mut self) {
@@ -423,11 +451,11 @@ impl<'a> Pack<'a> {
         for block in self.block_registry.blocks.iter() {
             extern crate jsonxf;
             info(
-                format!("Generating Block \"{}\"", &block.type_id.render()),
+                format!("Generating Block \"{}\"", &block.type_id().render()),
                 "[ BLOCK ]".to_string(),
             );
             let file_name: String = block
-                .type_id
+                .type_id()
                 .render()
                 .chars()
                 .into_iter()
@@ -449,20 +477,21 @@ impl<'a> Pack<'a> {
                 "./{RESULT_FOLDER}/packs/{}/RP/textures/blocks",
                 &self.id
             ));
-            let _ = match fs::copy(
-                block.clone().texture_set,
-                format!(
-                    "./{RESULT_FOLDER}/packs/{}/RP/textures/blocks/{}.png",
-                    &self.id, &file_name
-                ),
-            ) {
-                Ok(_) => "Ok!",
-                Err(_) => "Err!",
-            };
         }
 
+        self.generate_block_textures();
         self.generate_block_atlas();
         self.generate_terrain_atlas();
+    }
+
+    fn generate_block_textures(&self) {
+        let textures = self.block_registry.textures.clone();
+
+        for texture in textures {
+            texture.src().build(PathBuf::from(format!(
+                "./{RESULT_FOLDER}/packs/{}/RP/textures/blocks/{}.png", &self.id, texture.texture_name()
+            )));
+        }
     }
 
     fn generate_block_atlas(&self) {
@@ -506,11 +535,23 @@ impl<'a> Pack<'a> {
         };
     }
 
-    pub fn register_block(&mut self, block: Block<'a>) {
+    pub fn register_block(&mut self, block: Block) {
         self.block_registry.add_block(block.clone());
         info(
-            format!("Registering block {}", block.type_id.render()),
+            format!("Registering block {}", block.type_id().render()),
             "[ BLOCK ]".to_string(),
         );
+    }
+
+    pub fn generate_localizations(&self) {
+        fs::create_dir_all(format!("./{RESULT_FOLDER}/packs/{}/RP/texts/", &self.id)).unwrap();
+
+        for localization in self.localizations.clone() {
+            localization.build(format!("./{RESULT_FOLDER}/packs/{}/RP/texts/", &self.id));
+        }
+    }
+
+    pub fn add_localization(&mut self, localization: Localization) {
+        self.localizations.push(localization)
     }
 }

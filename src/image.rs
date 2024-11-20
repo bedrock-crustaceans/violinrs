@@ -1,12 +1,21 @@
+use std::cmp::max;
+use std::ops::Index;
 use hsl::HSL;
 use image::{GenericImage, ImageBuffer, Pixel, Rgb, RgbImage, Rgba, RgbaImage};
 use std::path::PathBuf;
+use photon_rs::PhotonImage;
 
 #[derive(Clone)]
 pub struct Image {
     source: PathBuf,
     hue_shift: f64,
     img: RgbaImage,
+}
+
+pub enum BlendMode {
+    Overlay,
+    Multiply,
+    SoftLight
 }
 
 impl Image {
@@ -80,4 +89,41 @@ impl Image {
             hue_shift: self.hue_shift,
         }
     }
+
+    pub fn compose(&self, other: Self, blend_mode: BlendMode) -> Image {
+        let new_src = match blend_mode {
+            BlendMode::Overlay => {
+                compose(self.img.clone(), other.img, "overlay")
+            },
+            BlendMode::Multiply =>{
+                compose(self.img.clone(), other.img, "multiply")
+            },
+            BlendMode::SoftLight =>{
+                compose(self.img.clone(), other.img, "soft_light")
+            }
+        };
+
+        Self {
+            source: self.source.clone(),
+            img: new_src,
+            hue_shift: self.hue_shift,
+        }
+    }
+}
+
+fn photon_from_rgba_image(img: RgbaImage) -> PhotonImage {
+    PhotonImage::new(img.as_raw().clone(), img.width(), img.height())
+}
+
+fn rgba_image_from_photon(img: PhotonImage) -> RgbaImage {
+    RgbaImage::from_raw(img.get_width(), img.get_height(), img.get_raw_pixels()).unwrap()
+}
+
+fn compose(a: RgbaImage, b: RgbaImage, blend_mode: &str) -> RgbaImage {
+    let mut ai = photon_from_rgba_image(a);
+    let mut bi = photon_from_rgba_image(b);
+
+    photon_rs::multiple::blend(&mut ai, &bi, blend_mode);
+
+    rgba_image_from_photon(ai)
 }

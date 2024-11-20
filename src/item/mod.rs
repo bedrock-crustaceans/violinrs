@@ -35,7 +35,7 @@ impl Item {
         Item {
             type_id,
             components: vec![],
-            format_version: SemVer::new(1, 21, 0),
+            format_version: SemVer::current(),
         }
     }
 
@@ -45,10 +45,11 @@ impl Item {
         self.clone()
     }
 
-    pub fn with_components(&mut self, components: Vec<Arc<dyn component::ItemComponent>>) -> Self {
-        self.components = components;
+    pub fn using_components(&mut self, components: Vec<Arc<dyn component::ItemComponent>>) -> Self {
+        let mut sc = self.clone();
+        sc.components = components;
 
-        self.clone()
+        sc
     }
 
     pub fn type_id(&self) -> Identifier {

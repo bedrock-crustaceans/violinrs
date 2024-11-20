@@ -7,10 +7,11 @@ pub mod pack;
 pub mod recipe;
 pub mod template;
 pub mod vio;
+pub mod localization;
 
 #[cfg(test)]
 mod tests {
-    use crate::image::Image;
+    use crate::image::{BlendMode, Image};
     use crate::item::component::{
         ItemAllowOffHandComponent, ItemCustomComponents, ItemHandEquippedComponent,
         ItemMaxStackValueComponent,
@@ -26,7 +27,11 @@ mod tests {
         pack::{Pack, ScriptData},
     };
     use crate::block::Block;
-    use crate::block::component::BlockLightEmissionComponent;
+    use crate::block::block_registry::{AllBlockAtlasEntry, BlockAtlasEntry, BlockTexture, Faces, PerFaceBlockAtlasEntry};
+    use crate::block::component::{BlockDisplayNameComponent, BlockFrictionComponent, BlockLightEmissionComponent};
+    use crate::block::permutation::BlockPermutation;
+    use crate::block::state::{NumericBlockState, RangedBlockState};
+    use crate::localization::Localization;
 
     fn register_items(pack: &mut Pack) {
         pack.register_item_texture(ItemTexture::new(
@@ -37,7 +42,7 @@ mod tests {
 
         pack.register_item(
             Item::new(Identifier::new("violin", "amethyst_sword"))
-                .with_components(vec![
+                .using_components(vec![
                     ItemDamageComponent::new(14).build(),
                     ItemDisplayNameComponent::new("Amethyst Sword\n\nThe power of refraction.")
                         .build(),
@@ -61,7 +66,7 @@ mod tests {
         ));
         pack.register_item(
             Item::new(Identifier::new("violin", "emerald_sword"))
-                .with_components(vec![
+                .using_components(vec![
                     ItemDamageComponent::new(5).build(),
                     ItemDisplayNameComponent::new("Emerald Sword\n\nThe power of 'Hmm...'.")
                         .build(),
@@ -138,16 +143,59 @@ mod tests {
         register_items(&mut pack);
         register_recipes(&mut pack);
 
-        pack.register_block(Block {
-            type_id: Identifier::new("violin", "test"),
-            components: vec![
-                BlockLightEmissionComponent::new(14).build()
-            ],
-            texture_set: String::from("./textures/diamond_sword.png"),
-            sound: String::from("stone"),
-            permutations: vec![],
-            states: vec![],
-        });
+        pack.register_block(Block::new(
+            Identifier::new("violin", "test")
+        ).using_components(
+            vec![
+                BlockFrictionComponent::new(0.1).build()
+            ]
+        ).using_states(
+            vec![
+                NumericBlockState::new(Identifier::new("v", "t"), vec![0, 1, 2, 3]).build()
+            ]
+        ).using_format_version(
+            SemVer::new(1, 21, 0)
+        ));
+
+        pack.register_block_texture(
+          BlockTexture::new(
+              Image::new("./textures/diamond_sword.png").compose(
+                  Image::new("./textures/Violin Icon.png"),
+                  BlendMode::Multiply
+              ),
+              Identifier::new("violin", "test"),
+              "violin-tex-test"
+          )
+        );
+
+
+        pack.register_block_texture(
+            BlockTexture::new(
+                Image::new("./textures/diamond_sword.png").with_hue_shift(60.0),
+                Identifier::new("violin", "test_up"),
+                "violin-tex-test-up"
+            )
+        );
+
+        pack.register_block_atlas_entry(
+            PerFaceBlockAtlasEntry::new(
+                Identifier::new("violin", "test"),
+                Faces::new_identifiers(
+                    Identifier::new("violin", "test_up"),
+                    Identifier::new("violin", "test"),
+                    Identifier::new("violin", "test"),
+                    Identifier::new("violin", "test"),
+                    Identifier::new("violin", "test"),
+                    Identifier::new("violin", "test"),
+                ),
+                "stone"
+            ).build()
+        );
+
+        let mut en_us = Localization::new("en_US");
+
+        en_us.add_block_name(Identifier::new("violin", "test"), "Violin Test");
+        pack.add_localization(en_us);
 
         pack.generate();
         pack.build_to_dev();

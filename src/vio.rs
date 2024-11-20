@@ -89,4 +89,13 @@ impl SemVer {
             self.patch,
         )
     }
+
+    pub fn current() -> Self {
+        Self {
+            major: 1,
+            minor: 21,
+            patch: 40,
+            beta: false
+        }
+    }
 }

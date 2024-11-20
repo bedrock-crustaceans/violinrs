@@ -1,13 +1,16 @@
-use crate::vio::Identifier;
+use crate::vio::{Buildable, Identifier};
 use askama::Template;
 
 pub trait BlockState {
     fn serialize(&self) -> String;
 }
 
+#[derive(Clone)]
 pub struct BoolBlockState {
     pub id: Identifier,
 }
+
+impl Buildable for BoolBlockState {}
 
 #[derive(Template)]
 #[template(
@@ -28,9 +31,20 @@ impl BlockState for BoolBlockState {
     }
 }
 
+#[derive(Clone)]
 pub struct NumericBlockState {
     pub id: Identifier,
     pub values: Vec<i32>,
+}
+
+impl Buildable for NumericBlockState {}
+
+impl NumericBlockState {
+    pub fn new(id: Identifier, values: Vec<i32>) -> Self {
+        Self {
+            id, values
+        }
+    }
 }
 
 #[derive(Template)]
@@ -54,12 +68,24 @@ impl BlockState for NumericBlockState {
     }
 }
 
-pub struct StringBlockState<'a> {
+#[derive(Clone)]
+pub struct StringBlockState {
     pub id: Identifier,
-    pub values: Vec<&'a str>,
+    pub values: Vec<String>,
 }
 
-impl BlockState for StringBlockState<'_> {
+impl Buildable for StringBlockState {}
+
+impl StringBlockState {
+    pub fn new(id: Identifier, values: Vec<impl Into<String>>) -> Self {
+        Self {
+            id,
+            values: values.into_iter().map(|v| v.into()).collect(),
+        }
+    }
+}
+
+impl BlockState for StringBlockState {
     fn serialize(&self) -> String {
         VariableBlockStateTemplate {
             identifier: self.id.render().to_string(),
@@ -70,10 +96,23 @@ impl BlockState for StringBlockState<'_> {
     }
 }
 
+#[derive(Clone)]
 pub struct RangedBlockState {
     pub id: Identifier,
     pub min: i32,
     pub max: i32,
+}
+
+impl Buildable for RangedBlockState {}
+
+impl RangedBlockState {
+    pub fn new(id: Identifier, min: i32, max: i32) -> Self {
+        Self {
+            id,
+            min,
+            max
+        }
+    }
 }
 
 #[derive(Template)]

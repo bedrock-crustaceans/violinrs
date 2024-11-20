@@ -1,12 +1,22 @@
 use crate::block::component::BlockComponent;
 use askama::Template;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 #[derive(Clone)]
-pub struct BlockPermutation<'a> {
-    pub(crate) condition: &'a str,
-    pub(crate) components: Vec<&'a dyn BlockComponent>,
+pub struct BlockPermutation {
+    pub condition: String,
+    pub components: Vec<Arc<dyn BlockComponent>>,
 }
+
+impl BlockPermutation {
+    pub fn new(condition: impl Into<String>, components: Vec<Arc<dyn BlockComponent>>) -> Self {
+        Self {
+            components,
+            condition: condition.into(),
+        }
+    }
+}
+
 
 #[derive(Template)]
 #[template(path = "block_serialization/permutation.json.jinja2", escape = "none")]
@@ -15,7 +25,7 @@ struct BlockPermutationTemplate {
     components: String,
 }
 
-impl BlockPermutation<'_> {
+impl BlockPermutation {
     pub fn serialize(&self) -> String {
         let components = self.components.clone();
         let mut components_strings: Vec<String> = vec![];

@@ -1,7 +1,7 @@
 use self::component::BlockComponent;
 use crate::block::permutation::BlockPermutation;
 use crate::block::state::BlockState;
-use crate::vio::Identifier;
+use crate::vio::{Identifier, SemVer};
 use askama::Template;
 use std::sync::Arc;
 
@@ -12,16 +12,15 @@ pub mod permutation;
 pub mod state;
 
 #[derive(Clone)]
-pub struct Block<'a> {
-    pub type_id: Identifier,
+pub struct Block {
+    type_id: Identifier,
+    pub format_version: SemVer,
     pub components: Vec<Arc<dyn BlockComponent>>,
-    pub permutations: Vec<BlockPermutation<'a>>,
-    pub states: Vec<&'a dyn BlockState>,
-    pub texture_set: String,
-    pub sound: String,
+    pub permutations: Vec<BlockPermutation>,
+    pub states: Vec<Arc<dyn BlockState>>,
 }
 
-impl<'a> Block<'a> {
+impl Block {
     pub fn serialize(&self) -> String {
         let components = self.components.clone();
         let mut components_strings: Vec<String> = vec![];
@@ -40,8 +39,8 @@ impl<'a> Block<'a> {
         permutations.pop();
 
         let mut states = String::from("");
-        for perm in self.states.clone() {
-            states.push_str(perm.serialize().as_str());
+        for state in self.states.clone() {
+            states.push_str(state.serialize().as_str());
             states.push(',');
         }
         states.pop();
@@ -52,11 +51,54 @@ impl<'a> Block<'a> {
             traits: "".to_string(),
             states,
             permutations,
+            format_version: self.format_version.render()
         }
         .render()
         .unwrap()
     }
 
+
+    pub fn new(type_id: Identifier) -> Self {
+        Self {
+            type_id,
+            states: vec![],
+            permutations: vec![],
+            components: vec![],
+            format_version: SemVer::current()
+        }
+    }
+
+    pub fn using_components(&mut self, components: Vec<Arc<dyn BlockComponent>>) -> Self {
+        let mut sc = self.clone();
+        sc.components = components;
+
+        sc
+    }
+
+    pub fn using_states(&mut self, states: Vec<Arc<dyn BlockState>>) -> Self {
+        let mut sc = self.clone();
+        sc.states = states;
+
+        sc
+    }
+
+    pub fn using_permutations(&mut self, permutations: Vec<BlockPermutation>) -> Self {
+        let mut sc = self.clone();
+        sc.permutations = permutations;
+
+        sc
+    }
+
+    pub fn using_format_version(&self, format_version: SemVer) -> Self {
+        let mut sc = self.clone();
+        sc.format_version = format_version;
+
+        sc
+    }
+
+    pub fn type_id(&self) -> Identifier {
+        self.type_id.clone()
+    }
 }
 
 #[derive(Template)]
@@ -67,4 +109,5 @@ struct BlockTemplate {
     traits: String,
     permutations: String,
     states: String,
+    format_version: String
 }
