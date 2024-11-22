@@ -159,10 +159,7 @@ mod tests {
 
         pack.register_block_texture(
           BlockTexture::new(
-              Image::new("./textures/diamond_sword.png").compose(
-                  Image::new("./textures/Violin Icon.png"),
-                  BlendMode::Multiply
-              ),
+              Image::new("./textures/diamond_sword.png"),
               Identifier::new("violin", "test"),
               "violin-tex-test"
           )

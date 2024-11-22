@@ -5,3 +5,8 @@
 /violin_output
 /textures
 /node_modules
+/Cargo.lock
+/denoapi/.vscode
+/denoapi/target
+/denoapi/violin_output
+/denoapi/Cargo.lock
