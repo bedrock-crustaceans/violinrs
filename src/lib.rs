@@ -11,14 +11,14 @@ pub mod localization;
 
 #[cfg(test)]
 mod tests {
-    use crate::image::{BlendMode, Image};
+    use crate::image::{blend_modes::BlendMode, Image};
     use crate::item::component::{
         ItemAllowOffHandComponent, ItemCustomComponents, ItemHandEquippedComponent,
         ItemMaxStackValueComponent,
     };
     use crate::item::item_registry::ItemTexture;
     use crate::recipe::{FurnaceRecipe, RecipeIO, ShapedRecipe, ShapelessRecipe};
-    use crate::vio::{Buildable, Identifier, SemVer};
+    use crate::vio::{Buildable, Generatable, Identifier, SemVer};
     use crate::{
         item::{
             component::{ItemDamageComponent, ItemDisplayNameComponent, ItemIconComponent},
@@ -27,7 +27,7 @@ mod tests {
         pack::{Pack, ScriptData},
     };
     use crate::block::Block;
-    use crate::block::block_registry::{AllBlockAtlasEntry, BlockAtlasEntry, BlockTexture, Faces, PerFaceBlockAtlasEntry};
+    use crate::block::block_registry::{AllBlockAtlasEntry, BlockAtlasEntry, BlockRegistry, BlockTexture, Faces, PerFaceBlockAtlasEntry};
     use crate::block::component::{BlockDisplayNameComponent, BlockFrictionComponent, BlockLightEmissionComponent};
     use crate::block::permutation::BlockPermutation;
     use crate::block::state::{NumericBlockState, RangedBlockState};
@@ -196,5 +196,29 @@ mod tests {
 
         pack.generate();
         pack.build_to_dev();
+    }
+    
+    #[test]
+    fn standalone() {
+        let mut blockReg = BlockRegistry { 
+            block_atlas: vec![],
+            blocks: vec![],
+            terrain_atlas: vec![],
+            textures: vec![]
+        };
+        
+        let block = Block::new(Identifier::new("hello", "world"))
+            .using_components(
+                vec![
+                    BlockDisplayNameComponent::new("Hello, world!").build()
+                ]
+            )
+            .using_format_version(SemVer::new(1, 21, 40));
+        
+        blockReg.add_block(
+            block.clone()
+        );
+        
+        block.generate("./standalone_gen/block.json");
     }
 }

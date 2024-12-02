@@ -1,3 +1,4 @@
+use std::path::PathBuf;
 use std::sync::Arc;
 
 #[derive(Clone, Copy)]
@@ -42,6 +43,10 @@ pub trait Buildable: Clone {
     fn build(&self) -> Arc<Self> {
         Arc::new(self.clone())
     }
+}
+
+pub trait Generatable {
+    fn generate(&self, path_buf: impl Into<PathBuf>);
 }
 
 #[derive(Clone)]

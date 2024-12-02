@@ -1,7 +1,9 @@
+use std::fs;
+use std::path::PathBuf;
 use std::sync::Arc;
 use askama::Template;
 use crate::image::Image;
-use crate::vio::{Buildable, Identifier};
+use crate::vio::{Buildable, Generatable, Identifier};
 use super::Block;
 
 #[derive(Clone)]
@@ -262,6 +264,14 @@ impl BlockRegistry {
     pub fn add_block_atlas_entry(&mut self, entry: Arc<dyn BlockAtlasEntry>) {
         self.block_atlas.push(entry.clone());
     }
+    
+    pub fn unified_add_texture(&mut self, texture: BlockTexture) {
+        self.add_texture(texture.clone());
+        self.add_terrain_atlas_entry(TerrainAtlasEntry {
+            id: texture.id().clone().render(),
+            texture_path: format!("textures/blocks/{}.png", texture.texture_name())
+        });
+    }
 }
 
 #[derive(Clone)]
@@ -293,3 +303,15 @@ impl BlockTexture {
 
 impl Buildable for AllBlockAtlasEntry {}
 impl Buildable for PerFaceBlockAtlasEntry {}
+
+impl Generatable for BlockRegistry {
+    fn generate(&self, path_buf: impl Into<PathBuf>) {
+        let mut buf = path_buf.into();
+        buf.push("blocks.json");
+
+        fs::write(buf.clone(), serialize_block_atlas(&self.block_atlas)).unwrap();
+        buf.pop();
+        buf.push("terrain_texture.json");
+        fs::write(buf, serialize_terrain_atlas(&self.terrain_atlas)).unwrap();
+    }
+}

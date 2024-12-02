@@ -1,9 +1,12 @@
+use std::fs;
+use std::path::PathBuf;
 use self::component::BlockComponent;
 use crate::block::permutation::BlockPermutation;
 use crate::block::state::BlockState;
-use crate::vio::{Identifier, SemVer};
+use crate::vio::{Generatable, Identifier, SemVer};
 use askama::Template;
 use std::sync::Arc;
+use jsonxf::pretty_print;
 
 pub mod block_registry;
 pub mod component;
@@ -98,6 +101,12 @@ impl Block {
 
     pub fn type_id(&self) -> Identifier {
         self.type_id.clone()
+    }
+}
+
+impl Generatable for Block {
+    fn generate(&self, path_buf: impl Into<PathBuf>) {
+        fs::write(path_buf.into(), pretty_print(&self.serialize()).unwrap()).unwrap();
     }
 }
 

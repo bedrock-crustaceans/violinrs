@@ -1,8 +1,12 @@
+pub mod blend_modes;
+
 use std::cmp::max;
+use std::io::stderr;
 use std::ops::Index;
 use hsl::HSL;
 use image::{GenericImage, ImageBuffer, Pixel, Rgb, RgbImage, Rgba, RgbaImage};
 use std::path::PathBuf;
+use crate::image::blend_modes::{overlay_blend_mode, BlendMode};
 // use photon_rs::PhotonImage;
 
 #[derive(Clone)]
@@ -10,12 +14,6 @@ pub struct Image {
     source: PathBuf,
     hue_shift: f64,
     img: RgbaImage,
-}
-
-pub enum BlendMode {
-    Overlay,
-    Multiply,
-    SoftLight
 }
 
 impl Image {
@@ -90,25 +88,19 @@ impl Image {
         }
     }
 
-    // pub fn compose(&self, other: Self, blend_mode: BlendMode) -> Image {
-    //     let new_src = match blend_mode {
-    //         BlendMode::Overlay => {
-    //             compose(self.img.clone(), other.img, "overlay")
-    //         },
-    //         BlendMode::Multiply =>{
-    //             compose(self.img.clone(), other.img, "multiply")
-    //         },
-    //         BlendMode::SoftLight =>{
-    //             compose(self.img.clone(), other.img, "soft_light")
-    //         }
-    //     };
-    // 
-    //     Self {
-    //         source: self.source.clone(),
-    //         img: new_src,
-    //         hue_shift: self.hue_shift,
-    //     }
-    // }
+    pub fn compose(&self, other: Self, blend_mode: BlendMode) -> Image {
+        let new_src = match blend_mode {
+            BlendMode::Overlay => {
+                compose_overlay(self.clone(), other)
+            }
+        };
+
+        Self {
+            source: self.source.clone(),
+            img: new_src,
+            hue_shift: self.hue_shift,
+        }
+    }
 }
 
 // fn photon_from_rgba_image(img: RgbaImage) -> PhotonImage {
@@ -127,3 +119,28 @@ impl Image {
 // 
 //     rgba_image_from_photon(ai)
 // }
+
+fn compose_overlay(a: Image, b: Image) -> RgbaImage {
+    let a_src = a.img.clone();
+    let b_src = b.img.clone();
+
+    let mut result_src = RgbaImage::new(a_src.width(), a_src.height());
+
+    for (x, y, color) in result_src.enumerate_pixels_mut() {
+        let a_channels: Vec<f64> = a_src.get_pixel(x, y).clone().channels().iter().map(|x| x.clone() as f64 / 255.0).collect();
+        let b_channels: Vec<f64> = b_src.get_pixel(x, y).clone().channels().iter().map(|x| x.clone() as f64 / 255.0).collect();
+        let mut ar = a_channels[0]; let mut ag = a_channels[1]; let mut ab = a_channels[2]; let aa = a_channels[3];
+        let br = b_channels[0]; let bg = b_channels[1]; let bb = b_channels[2]; let ba = b_channels[3];
+        // let [mut br, mut bg, mut bb, mut ba]: [&f64] = b_src.get_pixel(x, y).clone().channels().iter().map(|x| x.clone() as f64 / 255.0).collect() else {
+        //     unreachable!()
+        // };
+
+        ar = overlay_blend_mode(ar, br, ba);
+        ag = overlay_blend_mode(ag, bg, ba);
+        ab = overlay_blend_mode(ab, bg, ba);
+
+        *color = Rgba([(ar * 255.0) as u8, (ag * 255.0) as u8, (ab * 255.0) as u8, (aa * 255.0) as u8]);
+    }
+
+    result_src
+}
