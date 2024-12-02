@@ -10,3 +10,4 @@
 /denoapi/target
 /denoapi/violin_output
 /denoapi/Cargo.lock
+/js-cli/target
