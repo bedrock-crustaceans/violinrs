@@ -1,260 +1,58 @@
 use crate::vio::{Buildable, Identifier};
 use askama::Template;
+use item_component_macros::item_component;
 
 pub trait ItemComponent {
     fn serialize(&self) -> String;
 }
 
 // * ItemDamageComponent
-#[derive(Template)]
-#[template(
-    path = "item_serialization/components/damage.json.jinja2",
-    escape = "none"
-)]
-struct ItemDamageComponentTemplate {
-    value: i32,
-}
-#[derive(Clone)]
-pub struct ItemDamageComponent {
-    value: i32,
-}
 
-impl ItemDamageComponent {
-    pub fn new(value: i32) -> Self {
-        ItemDamageComponent { value }
-    }
-
-    pub fn value(&self) -> i32 {
-        self.value
-    }
-}
-
-impl Buildable for ItemDamageComponent {}
-
-impl ItemComponent for ItemDamageComponent {
-    fn serialize(&self) -> String {
-        let value = self.value;
-        let val = ItemDamageComponentTemplate { value }.render().unwrap();
-        val
-    }
+item_component! {
+    name = Damage for "minecraft:damage";
+    value has i32 for "value" with "public" "optional";
 }
 
 // * ItemDisplayNameComponent
-#[derive(Template)]
-#[template(
-    path = "item_serialization/components/display_name.json.jinja2",
-    escape = "none"
-)]
-struct ItemDisplayNameComponentTemplate {
-    value: String,
-}
-#[derive(Clone)]
-pub struct ItemDisplayNameComponent {
-    value: String,
-}
 
-impl Buildable for ItemDisplayNameComponent {}
-
-impl ItemComponent for ItemDisplayNameComponent {
-    fn serialize(&self) -> String {
-        let value = self.value.clone();
-        let val: String = ItemDisplayNameComponentTemplate { value }.render().unwrap();
-        val
-    }
-}
-
-impl ItemDisplayNameComponent {
-    pub fn new(value: impl Into<String>) -> Self {
-        Self {
-            value: value.into(),
-        }
-    }
-
-    pub fn name(&self) -> String {
-        self.value.clone()
-    }
+item_component! {
+    name = DisplayName for "minecraft:display_name";
+    value has String for "value" with "public" "into";
 }
 
 // * ItemIconComponent
-#[derive(Template)]
-#[template(
-    path = "item_serialization/components/icon.json.jinja2",
-    escape = "none"
-)]
-struct ItemIconComponentTemplate {
-    texture: String,
-}
-#[derive(Clone)]
-pub struct ItemIconComponent {
-    texture: String,
-}
 
-impl Buildable for ItemIconComponent {}
-
-impl ItemComponent for ItemIconComponent {
-    fn serialize(&self) -> String {
-        let value = self.texture.clone();
-        let val: String = ItemIconComponentTemplate { texture: value }
-            .render()
-            .unwrap();
-        val
-    }
-}
-
-impl ItemIconComponent {
-    pub fn new(texture: impl Into<String>) -> Self {
-        Self {
-            texture: texture.into(),
-        }
-    }
-
-    pub fn texture(&self) -> String {
-        self.texture.clone()
-    }
+item_component! {
+    name = Icon for "minecraft:icon";
+    texture has String for "texture" with "public" "into";
 }
 
 // * ItemFuelComponent
-#[derive(Template)]
-#[template(
-    path = "item_serialization/components/fuel.json.jinja2",
-    escape = "none"
-)]
-struct ItemFuelComponentTemplate {
-    duration: i32,
-}
-#[derive(Clone)]
-pub struct ItemFuelComponent {
-    duration: i32,
-}
 
-impl ItemFuelComponent {
-    pub fn new(duration: i32) -> Self {
-        Self { duration }
-    }
-
-    pub fn duration(&self) -> i32 {
-        self.duration
-    }
-}
-
-impl Buildable for ItemFuelComponent {}
-
-impl ItemComponent for ItemFuelComponent {
-    fn serialize(&self) -> String {
-        let value = self.duration;
-        let val: String = ItemFuelComponentTemplate { duration: value }
-            .render()
-            .unwrap();
-        val
-    }
+item_component! {
+    name = Fuel for "minecraft:fuel";
+    duration has i32 for "duration" with "public";
 }
 
 // * ItemHandEquippedComponent
-#[derive(Template)]
-#[template(
-    path = "item_serialization/components/hand_equipped.json.jinja2",
-    escape = "none"
-)]
-struct ItemHandEquippedComponentTemplate {
-    value: bool,
-}
-#[derive(Clone)]
-pub struct ItemHandEquippedComponent {
-    value: bool,
-}
 
-impl ItemHandEquippedComponent {
-    pub fn new(value: bool) -> Self {
-        Self { value }
-    }
-
-    pub fn value(&self) -> bool {
-        self.value
-    }
-}
-
-impl Buildable for ItemHandEquippedComponent {}
-
-impl ItemComponent for ItemHandEquippedComponent {
-    fn serialize(&self) -> String {
-        let value = self.value;
-        let val: String = ItemHandEquippedComponentTemplate { value }
-            .render()
-            .unwrap();
-        val
-    }
+item_component! {
+    name = HandEquipped for "minecraft:hand_equipped";
+    value has bool for "value" with "public";
 }
 
 // * ItemAllowOffHandComponent
-#[derive(Template)]
-#[template(
-    path = "item_serialization/components/allow_off_hand.json.jinja2",
-    escape = "none"
-)]
-struct ItemAllowOffHandComponentTemplate {
-    value: bool,
-}
-#[derive(Clone)]
-pub struct ItemAllowOffHandComponent {
-    value: bool,
+
+item_component! {
+    name = AllowOffHand for "minecraft:allow_off_hand";
+    value has bool for "value" with "public";
 }
 
-impl Buildable for ItemAllowOffHandComponent {}
+// * ItemMaxStackSizeComponent
 
-impl ItemComponent for ItemAllowOffHandComponent {
-    fn serialize(&self) -> String {
-        let value = self.value;
-        let val: String = ItemAllowOffHandComponentTemplate { value }
-            .render()
-            .unwrap();
-        val
-    }
-}
-
-impl ItemAllowOffHandComponent {
-    pub fn new(value: bool) -> Self {
-        Self { value }
-    }
-
-    pub fn value(&self) -> bool {
-        self.value
-    }
-}
-
-// * ItemMaxStackValueComponent
-#[derive(Template)]
-#[template(
-    path = "item_serialization/components/max_stack_value.json.jinja2",
-    escape = "none"
-)]
-struct ItemMaxStackValueComponentTemplate {
-    value: i32,
-}
-#[derive(Clone)]
-pub struct ItemMaxStackValueComponent {
-    value: i32,
-}
-
-impl ItemMaxStackValueComponent {
-    pub fn new(value: i32) -> Self {
-        Self { value }
-    }
-
-    pub fn value(&self) -> i32 {
-        self.value
-    }
-}
-
-impl Buildable for ItemMaxStackValueComponent {}
-
-impl ItemComponent for ItemMaxStackValueComponent {
-    fn serialize(&self) -> String {
-        let value = self.value;
-        let val: String = ItemMaxStackValueComponentTemplate { value }
-            .render()
-            .unwrap();
-        val
-    }
+item_component! {
+    name = MaxStackSize for "minecraft:max_stack_size";
+    value has i32 for "value" with "public";
 }
 
 // * ItemDurabilityComponent

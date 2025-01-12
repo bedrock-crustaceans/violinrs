@@ -1,22 +1,37 @@
+use item_component_macros::item_component;
+use serde::Serialize;
+
 pub mod block;
 pub mod constant;
 pub mod image;
 pub mod item;
+pub mod localization;
 pub mod logger;
 pub mod pack;
 pub mod recipe;
 pub mod template;
 pub mod vio;
-pub mod localization;
 
 #[cfg(test)]
 mod tests {
+    use crate::item::component::ItemComponent;
+use crate::block::block_registry::{
+        AllBlockAtlasEntry, BlockAtlasEntry, BlockRegistry, BlockTexture, Faces,
+        PerFaceBlockAtlasEntry,
+    };
+    use crate::block::component::{
+        BlockDisplayNameComponent, BlockFrictionComponent, BlockLightEmissionComponent,
+    };
+    use crate::block::permutation::BlockPermutation;
+    use crate::block::state::{NumericBlockState, RangedBlockState};
+    use crate::block::Block;
     use crate::image::{blend_modes::BlendMode, Image};
     use crate::item::component::{
         ItemAllowOffHandComponent, ItemCustomComponents, ItemHandEquippedComponent,
-        ItemMaxStackValueComponent,
+        ItemMaxStackSizeComponent,
     };
     use crate::item::item_registry::ItemTexture;
+    use crate::localization::Localization;
     use crate::recipe::{FurnaceRecipe, RecipeIO, ShapedRecipe, ShapelessRecipe};
     use crate::vio::{Buildable, Generatable, Identifier, SemVer};
     use crate::{
@@ -26,12 +41,7 @@ mod tests {
         },
         pack::{Pack, ScriptData},
     };
-    use crate::block::Block;
-    use crate::block::block_registry::{AllBlockAtlasEntry, BlockAtlasEntry, BlockRegistry, BlockTexture, Faces, PerFaceBlockAtlasEntry};
-    use crate::block::component::{BlockDisplayNameComponent, BlockFrictionComponent, BlockLightEmissionComponent};
-    use crate::block::permutation::BlockPermutation;
-    use crate::block::state::{NumericBlockState, RangedBlockState};
-    use crate::localization::Localization;
+    use item_component_macros::item_component;
 
     fn register_items(pack: &mut Pack) {
         pack.register_item_texture(ItemTexture::new(
@@ -48,13 +58,10 @@ mod tests {
                         .build(),
                     ItemIconComponent::new("violin_amethyst_sword").build(),
                     ItemHandEquippedComponent::new(true).build(),
-                    ItemMaxStackValueComponent::new(1).build(),
+                    ItemMaxStackSizeComponent::new(1).build(),
                     ItemAllowOffHandComponent::new(true).build(),
-                    ItemCustomComponents::new(
-                        vec![
-                            Identifier::new("vio", "amethyst_sword")
-                        ]
-                    ).build()
+                    ItemCustomComponents::new(vec![Identifier::new("vio", "amethyst_sword")])
+                        .build(),
                 ])
                 .using_format_version(SemVer::new(1, 21, 20)),
         );
@@ -72,7 +79,7 @@ mod tests {
                         .build(),
                     ItemIconComponent::new("violin_emerald_sword").build(),
                     ItemHandEquippedComponent::new(true).build(),
-                    ItemMaxStackValueComponent::new(1).build(),
+                    ItemMaxStackSizeComponent::new(1).build(),
                     ItemAllowOffHandComponent::new(true).build(), // ItemCustomComponents::new(
                                                                   //     vec![
                                                                   //         Identifier::new("violin", "amethyst_sword")
@@ -132,7 +139,9 @@ mod tests {
             "Official add-on made using Violin.rs",
             r"C:\Users\narol\AppData\Local\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\development_behavior_packs", // Developer BP Folder
             r"C:\Users\narol\AppData\Local\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\development_resource_packs", // Developer RP Folder
-            Image::new(r"./textures/diamond_sword.png").with_hue_shift(120.0).upscaled(16),
+            Image::new(r"./textures/diamond_sword.png")
+                .with_hue_shift(120.0)
+                .upscaled(16),
             ScriptData::new(
                 SemVer::new(1, 14, 0),
                 SemVer::new(1, 3, 0),
@@ -143,36 +152,28 @@ mod tests {
         register_items(&mut pack);
         register_recipes(&mut pack);
 
-        pack.register_block(Block::new(
-            Identifier::new("violin", "test")
-        ).using_components(
-            vec![
-                BlockFrictionComponent::new(0.1).build()
-            ]
-        ).using_states(
-            vec![
-                NumericBlockState::new(Identifier::new("v", "t"), vec![0, 1, 2, 3]).build()
-            ]
-        ).using_format_version(
-            SemVer::new(1, 21, 0)
+        pack.register_block(
+            Block::new(Identifier::new("violin", "test"))
+                .using_components(vec![BlockFrictionComponent::new(0.1).build()])
+                .using_states(vec![NumericBlockState::new(
+                    Identifier::new("v", "t"),
+                    vec![0, 1, 2, 3],
+                )
+                .build()])
+                .using_format_version(SemVer::new(1, 21, 0)),
+        );
+
+        pack.register_block_texture(BlockTexture::new(
+            Image::new("./textures/diamond_sword.png"),
+            Identifier::new("violin", "test"),
+            "violin-tex-test",
         ));
 
-        pack.register_block_texture(
-          BlockTexture::new(
-              Image::new("./textures/diamond_sword.png"),
-              Identifier::new("violin", "test"),
-              "violin-tex-test"
-          )
-        );
-
-
-        pack.register_block_texture(
-            BlockTexture::new(
-                Image::new("./textures/diamond_sword.png").with_hue_shift(60.0),
-                Identifier::new("violin", "test_up"),
-                "violin-tex-test-up"
-            )
-        );
+        pack.register_block_texture(BlockTexture::new(
+            Image::new("./textures/diamond_sword.png").with_hue_shift(60.0),
+            Identifier::new("violin", "test_up"),
+            "violin-tex-test-up",
+        ));
 
         pack.register_block_atlas_entry(
             PerFaceBlockAtlasEntry::new(
@@ -185,8 +186,9 @@ mod tests {
                     Identifier::new("violin", "test"),
                     Identifier::new("violin", "test"),
                 ),
-                "stone"
-            ).build()
+                "stone",
+            )
+            .build(),
         );
 
         let mut en_us = Localization::new("en_US");
@@ -197,28 +199,27 @@ mod tests {
         pack.generate();
         pack.build_to_dev();
     }
-    
+
     #[test]
     fn standalone() {
-        let mut blockReg = BlockRegistry { 
+        let mut blockReg = BlockRegistry {
             block_atlas: vec![],
             blocks: vec![],
             terrain_atlas: vec![],
-            textures: vec![]
+            textures: vec![],
         };
-        
+
         let block = Block::new(Identifier::new("hello", "world"))
-            .using_components(
-                vec![
-                    BlockDisplayNameComponent::new("Hello, world!").build()
-                ]
-            )
+            .using_components(vec![BlockDisplayNameComponent::new("Hello, world!").build()])
             .using_format_version(SemVer::new(1, 21, 40));
-        
-        blockReg.add_block(
-            block.clone()
-        );
-        
+
+        blockReg.add_block(block.clone());
+
         block.generate("./standalone_gen/block.json");
+
+        // item_component! {
+        //     name = IDK for "minecraft:idk";
+        //     num has String for "num" with into;
+        // }
     }
 }
