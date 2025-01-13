@@ -1,6 +1,3 @@
-use item_component_macros::item_component;
-use serde::Serialize;
-
 pub mod block;
 pub mod constant;
 pub mod image;
@@ -14,26 +11,25 @@ pub mod vio;
 
 #[cfg(test)]
 mod tests {
-    use crate::item::component::ItemComponent;
+    use crate::item::component::{ItemDamageAbsorptionComponent, ItemDiggerComponent, ItemDurabiltyComponent, ItemRepairEntry, ItemRepairableComponent};
 use crate::block::block_registry::{
-        AllBlockAtlasEntry, BlockAtlasEntry, BlockRegistry, BlockTexture, Faces,
+        BlockRegistry, BlockTexture, Faces,
         PerFaceBlockAtlasEntry,
     };
     use crate::block::component::{
-        BlockDisplayNameComponent, BlockFrictionComponent, BlockLightEmissionComponent,
+        BlockDisplayNameComponent, BlockFrictionComponent,
     };
-    use crate::block::permutation::BlockPermutation;
-    use crate::block::state::{NumericBlockState, RangedBlockState};
+    use crate::block::state::{NumericBlockState};
     use crate::block::Block;
-    use crate::image::{blend_modes::BlendMode, Image};
+    use crate::image::{Image};
     use crate::item::component::{
-        ItemAllowOffHandComponent, ItemCustomComponents, ItemHandEquippedComponent,
+        ItemAllowOffHandComponent, ItemCustomComponentsComponent, ItemHandEquippedComponent,
         ItemMaxStackSizeComponent,
     };
     use crate::item::item_registry::ItemTexture;
     use crate::localization::Localization;
     use crate::recipe::{FurnaceRecipe, RecipeIO, ShapedRecipe, ShapelessRecipe};
-    use crate::vio::{Buildable, Generatable, Identifier, SemVer};
+    use crate::vio::{vec_into, Buildable, Generatable, Identifier, MolangStatement, RangeDescriptor, SemVer};
     use crate::{
         item::{
             component::{ItemDamageComponent, ItemDisplayNameComponent, ItemIconComponent},
@@ -41,7 +37,7 @@ use crate::block::block_registry::{
         },
         pack::{Pack, ScriptData},
     };
-    use item_component_macros::item_component;
+    use crate::block::utils::{BlockDescriptor, BlockDestroySpeed};
 
     fn register_items(pack: &mut Pack) {
         pack.register_item_texture(ItemTexture::new(
@@ -60,8 +56,34 @@ use crate::block::block_registry::{
                     ItemHandEquippedComponent::new(true).build(),
                     ItemMaxStackSizeComponent::new(1).build(),
                     ItemAllowOffHandComponent::new(true).build(),
-                    ItemCustomComponents::new(vec![Identifier::new("vio", "amethyst_sword")])
+                    ItemCustomComponentsComponent::new(vec![Identifier::new("vio", "amethyst_sword")])
                         .build(),
+                    ItemDurabiltyComponent::new(
+                        RangeDescriptor::new(0, 1),
+                        1280
+                    ).build(),
+                    ItemRepairableComponent::new(
+                        vec![
+                            ItemRepairEntry::new(vec!["minecraft:stick"], "(1.0)")
+                        ]
+                    ).build(),
+                    ItemDamageAbsorptionComponent::new(
+                        vec_into(vec![
+                            "entity_attack"
+                        ])
+                    ).build(),
+                    ItemDiggerComponent::new(
+                        false,
+                        vec![
+                            BlockDestroySpeed::new(
+                                BlockDescriptor::new(
+                                    MolangStatement::new("q.any_tag('hello_world', 'hello_violin')")
+                                ),
+                                10
+                            )
+                        ]
+                    ).build(),
+
                 ])
                 .using_format_version(SemVer::new(1, 21, 20)),
         );
@@ -80,7 +102,7 @@ use crate::block::block_registry::{
                     ItemIconComponent::new("violin_emerald_sword").build(),
                     ItemHandEquippedComponent::new(true).build(),
                     ItemMaxStackSizeComponent::new(1).build(),
-                    ItemAllowOffHandComponent::new(true).build(), // ItemCustomComponents::new(
+                    ItemAllowOffHandComponent::new(true).build(), // ItemCustomComponentsComponent::new(
                                                                   //     vec![
                                                                   //         Identifier::new("violin", "amethyst_sword")
                                                                   //     ]
@@ -202,7 +224,7 @@ use crate::block::block_registry::{
 
     #[test]
     fn standalone() {
-        let mut blockReg = BlockRegistry {
+        let mut block_reg = BlockRegistry {
             block_atlas: vec![],
             blocks: vec![],
             terrain_atlas: vec![],
@@ -213,7 +235,7 @@ use crate::block::block_registry::{
             .using_components(vec![BlockDisplayNameComponent::new("Hello, world!").build()])
             .using_format_version(SemVer::new(1, 21, 40));
 
-        blockReg.add_block(block.clone());
+        block_reg.add_block(block.clone());
 
         block.generate("./standalone_gen/block.json");
 

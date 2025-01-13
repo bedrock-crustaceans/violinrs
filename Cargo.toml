@@ -23,6 +23,7 @@ hsl = "0.1.1"
 serde_json = "1.0.132"
 item_component_macros = { path = "item_component_macros" }
 
+
 [dependencies.uuid]
 version = "1.7.0"
 features = [

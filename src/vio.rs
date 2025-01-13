@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 use std::sync::Arc;
+use serde::{Deserialize, Serialize, Serializer};
 
 #[derive(Clone, Copy)]
 pub struct Vec3 {
@@ -8,7 +9,7 @@ pub struct Vec3 {
     pub z: f64,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Identifier {
     namespace: String,
     value: String,
@@ -24,6 +25,15 @@ impl Identifier {
             namespace: namespace.into(),
             value: value.into(),
         }
+    }
+}
+
+impl Serialize for Identifier {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(&self.render())
     }
 }
 
@@ -102,5 +112,36 @@ impl SemVer {
             patch: 40,
             beta: false
         }
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+#[derive(Clone, Debug)]
+pub struct RangeDescriptor<T> where T: Clone {
+    pub min: T,
+    pub max: T
+}
+
+impl<T> RangeDescriptor<T> where T: Clone {
+    pub fn new(min: T, max: T) -> Self {
+        Self { min, max }
+    }
+}
+
+pub fn vec_into<T>(vec: Vec<impl Into<T>>) -> Vec<T>
+where T: Clone {
+    let new_vec = vec.into_iter().map(|e| e.into()).collect();
+
+    new_vec
+}
+
+#[derive(Serialize, Deserialize)]
+#[derive(Clone, Debug)]
+#[serde(transparent)]
+pub struct MolangStatement(String);
+
+impl MolangStatement {
+    pub fn new(src: impl Into<String>) -> Self {
+        MolangStatement(src.into())
     }
 }

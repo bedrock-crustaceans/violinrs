@@ -13,6 +13,7 @@ pub mod component;
 
 pub mod permutation;
 pub mod state;
+pub mod utils;
 
 #[derive(Clone)]
 pub struct Block {

@@ -1,11 +1,8 @@
-use std::collections::VecDeque;
-use std::convert::Into;
-use mountain_sakura::lexer::structs::{KeywordType, OperatorType, SignType, Token};
 use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::{quote, ToTokens, TokenStreamExt};
+use std::convert::Into;
 use syn::parse::{Parse, ParseStream};
-use syn::{Lit, Token, Type, TypePath};
-use crate::statements::keywords::has;
+use syn::{Token, Type};
 
 mod keywords {
     use syn::custom_keyword;
@@ -18,7 +15,8 @@ mod keywords {
 pub(crate) struct ComponentData {
     pub name: String,
     pub property_id: String,
-    pub props: Vec<PropertyDeclaration>
+    pub props: Vec<PropertyDeclaration>,
+    pub modifiers: Vec<Modifier>
 }
 
 fn string_from_literal(lit: Literal) -> String {
@@ -161,14 +159,29 @@ impl Parse for ComponentData {
         _ = input.parse::<Token![for]>()?; // for
         let param_id = Literal::parse(input)?;
         dbg!(&param_id);
-        _ = input.parse::<Token![;]>()?;
+
+        let mut has_modifiers = true;
+        let mut modifiers: Vec<Modifier> = Vec::new();
+
+        if input.peek(Token![;]) {
+            _ = input.parse::<Token![;]>()?;
+            has_modifiers = false;
+        } else {
+            _ = input.parse::<keywords::with>()?;
+        }
+
+        if has_modifiers {
+            modifiers = parse_zero_or_more(input);
+            _ = input.parse::<Token![;]>()?;
+        }
 
         let props: Vec<PropertyDeclaration> = parse_zero_or_more(input);
 
         Ok(ComponentData {
             name: ident.to_string(),
             property_id: string_from_literal(param_id),
-            props
+            props,
+            modifiers
         })
     }
 }
@@ -215,9 +228,13 @@ impl ToTokens for ComponentData {
             }
         };
 
+        let additional_derives = get_additional_derives(&self);
+        
+
         let tks: TokenStream = quote! {
             #[derive(serde::Serialize, Debug, Clone)]
             #[serde(rename = #prop_id)]
+            #additional_derives
             pub struct #name {
                 #(#props)*
             }
@@ -383,6 +400,7 @@ enum Modifier {
     IntoModifier,
     Undetermined,
     Public,
+    Transparency,
     UsingFn
 }
 
@@ -404,6 +422,7 @@ impl Parse for Modifier {
             "into" => Ok(Modifier::IntoModifier),
             "public" => Ok(Modifier::Public),
             "using" => Ok(Modifier::UsingFn),
+            "transparency" => Ok(Modifier::Transparency),
             _ => Ok(Modifier::Undetermined)
         }
     }
@@ -445,6 +464,18 @@ fn get_using_statements_for(props: Vec<PropertyDeclaration>) -> TokenStream {
                 }
             );
         }
+    }
+
+    tks
+}
+
+fn get_additional_derives(component_data: &ComponentData) -> TokenStream {
+    let mut tks = quote! {};
+
+    if component_data.modifiers.contains(&Modifier::Transparency) {
+        tks.append_all(quote! {
+            #[serde(transparent)]
+        })
     }
 
     tks

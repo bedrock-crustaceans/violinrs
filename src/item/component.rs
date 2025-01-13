@@ -1,6 +1,8 @@
-use crate::vio::{Buildable, Identifier};
-use askama::Template;
+use crate::vio::{Buildable, Identifier, RangeDescriptor};
+use serde::{Deserialize, Serialize};
 use item_component_macros::item_component;
+use crate::block::utils::BlockDestroySpeed;
+use crate::item::utils::EnchantableSlot;
 
 pub trait ItemComponent {
     fn serialize(&self) -> String;
@@ -56,260 +58,163 @@ item_component! {
 }
 
 // * ItemDurabilityComponent
-#[derive(Template)]
-#[template(
-    path = "item_serialization/components/durability.json.jinja2",
-    escape = "none"
-)]
-struct ItemDurabilityComponentTemplate {
-    min_chance: i32,
-    max_chance: i32,
-    durability: i32,
-}
-#[derive(Clone)]
-pub struct ItemDurabilityComponent {
-    min_chance: i32,
-    max_chance: i32,
-    durability: i32,
-}
+// #[derive(Template)]
+// #[template(
+//     path = "item_serialization/components/durability.json.jinja2",
+//     escape = "none"
+// )]
+// struct ItemDurabilityComponentTemplate {
+//     min_chance: i32,
+//     max_chance: i32,
+//     durability: i32,
+// }
+// #[derive(Clone)]
+// pub struct ItemDurabilityComponent {
+//     min_chance: i32,
+//     max_chance: i32,
+//     durability: i32,
+// }
+//
+// impl Buildable for ItemDurabilityComponent {}
+//
+// impl ItemComponent for ItemDurabilityComponent {
+//     fn serialize(&self) -> String {
+//         let value = self.durability;
+//         let min_c = self.min_chance;
+//         let max_c = self.max_chance;
+//         let val: String = ItemDurabilityComponentTemplate {
+//             max_chance: max_c,
+//             min_chance: min_c,
+//             durability: value,
+//         }
+//         .render()
+//         .unwrap();
+//         val
+//     }
+// }
+//
+// impl ItemDurabilityComponent {
+//     pub fn new(min_chance: i32, max_chance: i32, durability: i32) -> Self {
+//         Self {
+//             min_chance,
+//             max_chance,
+//             durability,
+//         }
+//     }
+//
+//     pub fn min_chance(&self) -> i32 {
+//         self.min_chance
+//     }
+//
+//     pub fn max_chance(&self) -> i32 {
+//         self.max_chance
+//     }
+//
+//     pub fn durability(&self) -> i32 {
+//         self.durability
+//     }
+// }
 
-impl Buildable for ItemDurabilityComponent {}
-
-impl ItemComponent for ItemDurabilityComponent {
-    fn serialize(&self) -> String {
-        let value = self.durability;
-        let min_c = self.min_chance;
-        let max_c = self.max_chance;
-        let val: String = ItemDurabilityComponentTemplate {
-            max_chance: max_c,
-            min_chance: min_c,
-            durability: value,
-        }
-        .render()
-        .unwrap();
-        val
-    }
-}
-
-impl ItemDurabilityComponent {
-    pub fn new(min_chance: i32, max_chance: i32, durability: i32) -> Self {
-        Self {
-            min_chance,
-            max_chance,
-            durability,
-        }
-    }
-
-    pub fn min_chance(&self) -> i32 {
-        self.min_chance
-    }
-
-    pub fn max_chance(&self) -> i32 {
-        self.max_chance
-    }
-
-    pub fn durability(&self) -> i32 {
-        self.durability
-    }
+item_component! {
+    name = Durabilty for "minecraft:durability";
+    damage_chance has RangeDescriptor<i32> for "damage_chance" with "public";
+    max_durability has i32 for "max_durability" with "public";
 }
 
 // * ItemArmorComponent
-#[derive(Template)]
-#[template(
-    path = "item_serialization/components/armor.json.jinja2",
-    escape = "none"
-)]
-struct ItemArmorComponentTemplate {
-    protection: i32,
-}
-#[derive(Clone)]
-pub struct ItemArmorComponent {
-    protection: i32,
-}
 
-impl ItemArmorComponent {
-    pub fn new(protection: i32) -> Self {
-        Self { protection }
-    }
-
-    pub fn protection(&self) -> i32 {
-        self.protection
-    }
-}
-
-impl Buildable for ItemArmorComponent {}
-
-impl ItemComponent for ItemArmorComponent {
-    fn serialize(&self) -> String {
-        let value = self.protection;
-        let val: String = ItemArmorComponentTemplate { protection: value }
-            .render()
-            .unwrap();
-        val
-    }
+item_component! {
+    name = Armor for "minecraft:armor";
+    protection has i32 for "protection" with "public";
 }
 
 // * ItemCreativeCategoryComponent
-#[derive(Template)]
-#[template(
-    path = "item_serialization/components/creative_category.json.jinja2",
-    escape = "none"
-)]
-struct ItemCreativeCategoryComponentTemplate {
-    parent: String,
-}
-#[derive(Clone)]
-pub struct ItemCreativeCategoryComponent {
-    parent: String,
-}
 
-impl Buildable for ItemCreativeCategoryComponent {}
-
-impl ItemComponent for ItemCreativeCategoryComponent {
-    fn serialize(&self) -> String {
-        let parent = self.parent.clone();
-        let val: String = ItemCreativeCategoryComponentTemplate { parent }
-            .render()
-            .unwrap();
-        val
-    }
-}
-
-impl ItemCreativeCategoryComponent {
-    pub fn new(parent: impl Into<String>) -> Self {
-        Self {
-            parent: parent.into(),
-        }
-    }
-
-    pub fn parent(&self) -> String {
-        self.parent.clone()
-    }
+item_component! {
+    name = CreativeCategory for "minecraft:creative_category";
+    parent has String for "parent" with "public" "into";
 }
 
 // * ItemRepairableComponent
 
-#[derive(Template)]
-#[template(
-    path = "item_serialization/components/item_repair_entry.json.jinja2",
-    escape = "none"
-)]
-struct ItemRepairEntryTemplate {
-    items: String,
-    amount: String,
-}
-
 #[derive(Clone)]
+#[derive(Serialize, Deserialize)]
+#[derive(Debug)]
 pub struct ItemRepairEntry {
-    items: Vec<String>,
-    amount: String,
+    pub items: Vec<String>,
+    pub repair_amount: String,
 }
 impl ItemRepairEntry {
-    pub fn serialize(&self) -> String {
-        let items = format!("{:?}", self.items);
-        let amount = self.amount.clone();
-        let val: String = ItemRepairEntryTemplate { items, amount }.render().unwrap();
-        val
-    }
-
     pub fn new(items: Vec<impl Into<String> + Clone>, amount: impl Into<String>) -> Self {
         Self {
             items: items.iter().map(|x| (*x).clone().into()).collect(),
-            amount: amount.into(),
+            repair_amount: amount.into(),
         }
     }
-
-    pub fn amount(&self) -> String {
-        self.amount.clone()
-    }
-
-    pub fn items(&self) -> Vec<String> {
-        self.items.clone()
-    }
 }
 
-fn serialize_item_repairable_entries(repair_entries: &Vec<ItemRepairEntry>) -> String {
-    let mut serialized_entries = String::new();
-    for entry in repair_entries {
-        serialized_entries.push_str(&entry.serialize());
-        serialized_entries.push_str(",");
-    }
-    serialized_entries.pop();
-    serialized_entries
+item_component! {
+    name = Repairable for "minecraft:repairable";
+    repair_items has Vec<ItemRepairEntry> for "repair_items" with "public";
 }
 
-#[derive(Template)]
-#[template(
-    path = "item_serialization/components/repairable.json.jinja2",
-    escape = "none"
-)]
-struct ItemRepairableComponentTemplate {
-    repair_entries: String,
-}
-#[derive(Clone)]
-pub struct ItemRepairableComponent {
-    repair_entries: Vec<ItemRepairEntry>,
+// * ItemCustomComponents
+
+item_component! {
+    name = CustomComponents for "minecraft:custom_components" with "transparency";
+    components has Vec<Identifier> for "minecraft:custom_components" with "public";
 }
 
-impl Buildable for ItemRepairableComponent {}
+// * BundleInteraction
 
-impl ItemComponent for ItemRepairableComponent {
-    fn serialize(&self) -> String {
-        let repair_entries = &self.repair_entries;
-        let val: String = ItemRepairableComponentTemplate {
-            repair_entries: serialize_item_repairable_entries(repair_entries),
-        }
-        .render()
-        .unwrap();
-        val
-    }
+item_component! {
+    name = BundleInteraction for "minecraft:bundle_interaction";
+    viewable_slots has u8 for "num_viewable_slots" with "public";
 }
 
-impl ItemRepairableComponent {
-    pub fn new(repair_entries: Vec<ItemRepairEntry>) -> Self {
-        Self { repair_entries }
-    }
+// * CanDestroyInCreative
 
-    pub fn repair_entries(&self) -> Vec<ItemRepairEntry> {
-        self.repair_entries.clone()
-    }
+item_component! {
+    name = CanDestroyInCreative for "minecraft:can_destroy_in_creative";
+    value has bool for "value" with "public";
 }
 
-// ItemCustomComponents
+// * Cooldown
 
-#[derive(Template)]
-#[template(
-    path = "item_serialization/components/custom_components.json.jinja2",
-    escape = "none"
-)]
-pub struct ItemCustomComponentsTemplate {
-    pub components: String,
+item_component! {
+    name = Cooldown for "minecraft:cooldown";
+    category has String for "category" with "public";
+    duration has f64 for "duration" with "public";
 }
 
-#[derive(Clone)]
-pub struct ItemCustomComponents {
-    components: Vec<Identifier>,
+// * DamageAbsorption
+
+item_component! {
+    name = DamageAbsorption for "minecraft:damage_absorption";
+    absorbable_causes has Vec<String> for "absorbable_causes" with "public";
 }
 
-impl Buildable for ItemCustomComponents {}
+// * Digger
 
-impl ItemComponent for ItemCustomComponents {
-    fn serialize(&self) -> String {
-        let components_ser: Vec<String> = self.components.iter().map(|x| x.render()).collect();
-        let components = format!("{:?}", components_ser);
-        let val: String = ItemCustomComponentsTemplate { components }
-            .render()
-            .unwrap();
-        val
-    }
+item_component! {
+    name = Digger for "minecraft:digger";
+    use_efficiency has bool for "use_efficiency" with "public";
+    destroy_speeds has Vec<BlockDestroySpeed> for "destroy_speeds" with "public";
 }
 
-impl ItemCustomComponents {
-    pub fn new(components: Vec<Identifier>) -> Self {
-        Self { components }
-    }
+// * Enchantable
 
-    pub fn components(&self) -> Vec<Identifier> {
-        self.components.clone()
-    }
+item_component! {
+    name = Enchantable for "minecraft:enchantable";
+    value has u8 for "value" with "public";
+    slot has EnchantableSlot for "slot" with "public";
+}
+
+// * EntityPlacer
+
+item_component! {
+    name = EntityPlacer for "minecraft:entity_placer";
+    entity has Identifier for "entity" with "public";
+    dispense_on has Vec<Identifier> for "dispense_on" with "public";
+    use_on has Vec<Identifier> for "use_on" with "public";
 }
