@@ -1,8 +1,8 @@
-use crate::vio::{Buildable, Identifier, RangeDescriptor};
-use serde::{Deserialize, Serialize};
+use crate::vio::{Buildable, ColorCode, Identifier, RangeDescriptor};
+use serde::{Serialize};
 use item_component_macros::item_component;
 use crate::block::utils::BlockDestroySpeed;
-use crate::item::utils::EnchantableSlot;
+use crate::item::utils::{DurabilityThreshold, EnchantableSlot, ItemRarity, ItemRepairEntry, ItemTextureDescriptor};
 
 pub trait ItemComponent {
     fn serialize(&self) -> String;
@@ -26,7 +26,7 @@ item_component! {
 
 item_component! {
     name = Icon for "minecraft:icon";
-    texture has String for "texture" with "public" "into";
+    textures has ItemTextureDescriptor for "textures" with "public";
 }
 
 // * ItemFuelComponent
@@ -57,63 +57,7 @@ item_component! {
     value has i32 for "value" with "public";
 }
 
-// * ItemDurabilityComponent
-// #[derive(Template)]
-// #[template(
-//     path = "item_serialization/components/durability.json.jinja2",
-//     escape = "none"
-// )]
-// struct ItemDurabilityComponentTemplate {
-//     min_chance: i32,
-//     max_chance: i32,
-//     durability: i32,
-// }
-// #[derive(Clone)]
-// pub struct ItemDurabilityComponent {
-//     min_chance: i32,
-//     max_chance: i32,
-//     durability: i32,
-// }
-//
-// impl Buildable for ItemDurabilityComponent {}
-//
-// impl ItemComponent for ItemDurabilityComponent {
-//     fn serialize(&self) -> String {
-//         let value = self.durability;
-//         let min_c = self.min_chance;
-//         let max_c = self.max_chance;
-//         let val: String = ItemDurabilityComponentTemplate {
-//             max_chance: max_c,
-//             min_chance: min_c,
-//             durability: value,
-//         }
-//         .render()
-//         .unwrap();
-//         val
-//     }
-// }
-//
-// impl ItemDurabilityComponent {
-//     pub fn new(min_chance: i32, max_chance: i32, durability: i32) -> Self {
-//         Self {
-//             min_chance,
-//             max_chance,
-//             durability,
-//         }
-//     }
-//
-//     pub fn min_chance(&self) -> i32 {
-//         self.min_chance
-//     }
-//
-//     pub fn max_chance(&self) -> i32 {
-//         self.max_chance
-//     }
-//
-//     pub fn durability(&self) -> i32 {
-//         self.durability
-//     }
-// }
+// * Durability
 
 item_component! {
     name = Durabilty for "minecraft:durability";
@@ -136,22 +80,6 @@ item_component! {
 }
 
 // * ItemRepairableComponent
-
-#[derive(Clone)]
-#[derive(Serialize, Deserialize)]
-#[derive(Debug)]
-pub struct ItemRepairEntry {
-    pub items: Vec<String>,
-    pub repair_amount: String,
-}
-impl ItemRepairEntry {
-    pub fn new(items: Vec<impl Into<String> + Clone>, amount: impl Into<String>) -> Self {
-        Self {
-            items: items.iter().map(|x| (*x).clone().into()).collect(),
-            repair_amount: amount.into(),
-        }
-    }
-}
 
 item_component! {
     name = Repairable for "minecraft:repairable";
@@ -217,4 +145,61 @@ item_component! {
     entity has Identifier for "entity" with "public";
     dispense_on has Vec<Identifier> for "dispense_on" with "public";
     use_on has Vec<Identifier> for "use_on" with "public";
+}
+
+// * Glint
+
+item_component! {
+    name = Glint for "minecraft:glint";
+    value has bool for "value" with "public";
+}
+
+// * HoverTextColor
+
+item_component! {
+    name = HoverTextColor for "minecraft:hover_text_color" with "transparency";
+    color has ColorCode for "minecraft:hover_text_color" with "public";
+}
+
+// * DurabilitySensor
+
+item_component! {
+    name = DurabilitySensor for "minecraft:durability_sensor";
+    durability_thresholds has Vec<DurabilityThreshold> for "durability_thresholds" with "public";
+}
+
+// * Dyeable
+
+item_component! {
+    name = Dyeable for "minecraft:dyeable";
+    default_color has String for "default_color" with "public" "into";
+}
+
+// * InteractButton
+
+item_component! {
+    name = InteractButton for "minecraft:interact_button" with "transparency";
+    value has String for "minecraft:interact_button" with "public" "into";
+}
+
+// * LiquidClipped
+
+item_component! {
+    name = LiquidClipped for "minecraft:liquid_clipped";
+    value has bool for "value" with "public";
+}
+
+// * Projectile
+
+item_component! {
+    name = Projectile for "minecraft:projectile";
+    minimum_critical_power has f64 for "minimum_critical_power" with "public";
+    projectile_entity has Identifier for "projectile_entity" with "public";
+}
+
+// * Rarity
+
+item_component! {
+    name = Rarity for "minecraft:rarity" with "transparency";
+    rarity has ItemRarity for "minecraft:rarity" with "public";
 }

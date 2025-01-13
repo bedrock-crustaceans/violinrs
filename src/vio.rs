@@ -145,3 +145,74 @@ impl MolangStatement {
         MolangStatement(src.into())
     }
 }
+
+
+#[derive(Clone, Debug)]
+#[derive(Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ColorCode {
+    Black,
+    DarkBlue,
+    DarkGreen,
+    DarkAqua,
+    DarkRed,
+    DarkPurple,
+    Gold,
+    Gray,
+    DarkGray,
+    Blue,
+    Green,
+    Aqua,
+    Red,
+    LightPurple,
+    Yellow,
+    White,
+    MinecoinGold,
+    MaterialQuartz,
+    MaterialIron,
+    MaterialNetherite,
+    MaterialRedstone,
+    MaterialCopper,
+    MaterialGold,
+    MaterialEmerald,
+    MaterialDiamond,
+    MaterialLapis,
+    MaterialAmethyst,
+    MaterialResin
+}
+
+impl ColorCode {
+    /// The color code for use in strings. (in form of `§X`)
+    pub fn str_code(&self) -> &str {
+        match self {
+            ColorCode::Black => "§0",
+            ColorCode::DarkBlue => "§1",
+            ColorCode::DarkGreen => "§2",
+            ColorCode::DarkAqua => "§3",
+            ColorCode::DarkRed => "§4",
+            ColorCode::DarkPurple => "§5",
+            ColorCode::Gold => "§6",
+            ColorCode::Gray => "§7",
+            ColorCode::DarkGray => "§8",
+            ColorCode::Blue => "§9",
+            ColorCode::Green => "§a",
+            ColorCode::Aqua => "§b",
+            ColorCode::Red => "§c",
+            ColorCode::LightPurple => "§d",
+            ColorCode::Yellow => "§e",
+            ColorCode::White => "§f",
+            ColorCode::MinecoinGold => "§g",
+            ColorCode::MaterialQuartz => "§h",
+            ColorCode::MaterialIron => "§i",
+            ColorCode::MaterialNetherite => "§j",
+            ColorCode::MaterialRedstone => "§m",
+            ColorCode::MaterialCopper => "§n",
+            ColorCode::MaterialGold => "§p",
+            ColorCode::MaterialEmerald => "§q",
+            ColorCode::MaterialDiamond => "§s",
+            ColorCode::MaterialLapis => "§t",
+            ColorCode::MaterialAmethyst => "§u",
+            ColorCode::MaterialResin => "§v",
+        }
+    }
+}
