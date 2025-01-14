@@ -77,20 +77,18 @@ impl ItemTextureDescriptor {
         }
     }
 
-    pub fn using_dyed(&mut self, src: impl Into<String>) -> Self {
-        let mut sc = self.clone();
-
-        sc.dyed = Some(src.into());
-
-        sc
+    pub fn using_dyed(self, src: impl Into<String>) -> Self {
+        Self {
+            dyed: Some(src.into()),
+            ..self
+        }
     }
 
-    pub fn using_icon_trim(&mut self, src: impl Into<String>) -> Self {
-        let mut sc = self.clone();
-
-        sc.icon_trim = Some(src.into());
-
-        sc
+    pub fn using_icon_trim(self, src: impl Into<String>) -> Self {
+        Self {
+            icon_trim: Some(src.into()),
+            ..self
+        }
     }
 }
 

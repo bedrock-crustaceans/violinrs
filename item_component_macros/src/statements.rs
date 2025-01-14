@@ -443,22 +443,20 @@ fn get_using_statements_for(props: Vec<PropertyDeclaration>) -> TokenStream {
             tks.append_all(
                 if prop.modifiers.contains(&Modifier::IntoModifier) {
                     quote! {
-                        pub fn #fn_ident(&mut self, #prop_name: impl Into<#prop_type>) -> Self {
-                            let mut sc = self.clone();
-
-                            sc.#prop_name = #prop_name.into();
-
-                            sc
+                        pub fn #fn_ident(self, #prop_name: impl Into<#prop_type>) -> Self {
+                            Self {
+                                #prop_name: #prop_name.into(),
+                                ..self
+                            }
                         }
                     }
                 } else {
                     quote! {
-                        pub fn #fn_ident(&mut self, #prop_name: #prop_type) -> Self {
-                            let mut sc = self.clone();
-
-                            sc.#prop_name = #prop_name;
-
-                            sc
+                        pub fn #fn_ident(self, #prop_name: #prop_type) -> Self {
+                            Self {
+                                #prop_name: #prop_name,
+                                ..self
+                            }
                         }
                     }
                 }
