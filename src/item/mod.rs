@@ -5,6 +5,7 @@ use askama::Template;
 
 pub mod component;
 pub mod item_registry;
+pub mod utils;
 
 #[derive(Clone)]
 pub struct Item {

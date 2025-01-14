@@ -1,10 +1,7 @@
 pub mod blend_modes;
 
-use std::cmp::max;
-use std::io::stderr;
-use std::ops::Index;
 use hsl::HSL;
-use image::{GenericImage, ImageBuffer, Pixel, Rgb, RgbImage, Rgba, RgbaImage};
+use image::{GenericImage, Pixel, Rgba, RgbaImage};
 use std::path::PathBuf;
 use crate::image::blend_modes::{overlay_blend_mode, BlendMode};
 // use photon_rs::PhotonImage;
@@ -34,13 +31,13 @@ impl Image {
     }
 
     pub fn build(&self, path: PathBuf) {
-        &self.img.save(&path).unwrap();
+        let _ = &self.img.save(&path).unwrap();
     }
 
     pub fn with_hue_shift(&mut self, amount: f64) -> Self {
         self.hue_shift = amount;
 
-        for (x, y, color) in self.img.enumerate_pixels_mut() {
+        for (_, _, color) in self.img.enumerate_pixels_mut() {
             *color = Self::shifted(*color, amount)
         }
 
@@ -88,12 +85,16 @@ impl Image {
         }
     }
 
-    pub fn compose(&self, other: Self, blend_mode: BlendMode) -> Image {
-        let new_src = match blend_mode {
-            BlendMode::Overlay => {
-                compose_overlay(self.clone(), other)
-            }
-        };
+    pub fn compose(&self, other: Self, blend_mode: BlendMode, options: ComposeOptions) -> Image {
+        let mut new_src = self.clone().img;
+
+        for _ in 0..options.repeats {
+            match blend_mode {
+                BlendMode::Overlay => {
+                    new_src = compose_overlay(new_src, other.img.clone())
+                }
+            };
+        }
 
         Self {
             source: self.source.clone(),
@@ -120,9 +121,9 @@ impl Image {
 //     rgba_image_from_photon(ai)
 // }
 
-fn compose_overlay(a: Image, b: Image) -> RgbaImage {
-    let a_src = a.img.clone();
-    let b_src = b.img.clone();
+fn compose_overlay(a: RgbaImage, b: RgbaImage) -> RgbaImage {
+    let a_src = a;
+    let b_src = b;
 
     let mut result_src = RgbaImage::new(a_src.width(), a_src.height());
 
@@ -130,7 +131,7 @@ fn compose_overlay(a: Image, b: Image) -> RgbaImage {
         let a_channels: Vec<f64> = a_src.get_pixel(x, y).clone().channels().iter().map(|x| x.clone() as f64 / 255.0).collect();
         let b_channels: Vec<f64> = b_src.get_pixel(x, y).clone().channels().iter().map(|x| x.clone() as f64 / 255.0).collect();
         let mut ar = a_channels[0]; let mut ag = a_channels[1]; let mut ab = a_channels[2]; let aa = a_channels[3];
-        let br = b_channels[0]; let bg = b_channels[1]; let bb = b_channels[2]; let ba = b_channels[3];
+        let br = b_channels[0]; let bg = b_channels[1]; /*let bb = b_channels[2];*/ let ba = b_channels[3];
         // let [mut br, mut bg, mut bb, mut ba]: [&f64] = b_src.get_pixel(x, y).clone().channels().iter().map(|x| x.clone() as f64 / 255.0).collect() else {
         //     unreachable!()
         // };
@@ -143,4 +144,26 @@ fn compose_overlay(a: Image, b: Image) -> RgbaImage {
     }
 
     result_src
+}
+
+#[derive(Clone, Debug)]
+pub struct ComposeOptions {
+    pub repeats: u8
+}
+
+impl Default for ComposeOptions {
+    fn default() -> Self {
+        Self {
+            repeats: 1
+        }
+    }
+}
+
+impl ComposeOptions {
+    pub fn using_repeats(self, repeats: u8) -> Self {
+        Self {
+            repeats,
+            ..self
+        }
+    }
 }
