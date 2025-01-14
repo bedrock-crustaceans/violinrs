@@ -11,8 +11,9 @@ pub mod vio;
 
 #[cfg(test)]
 mod tests {
-    use crate::item::component::{ItemDamageAbsorptionComponent, ItemDiggerComponent, ItemDurabiltyComponent, ItemRepairEntry, ItemRepairableComponent};
-use crate::block::block_registry::{
+    use crate::item::component::{ItemDamageAbsorptionComponent, ItemDiggerComponent, ItemDurabiltyComponent, ItemRepairableComponent};
+    use crate::item::utils::ItemRepairEntry;
+    use crate::block::block_registry::{
         BlockRegistry, BlockTexture, Faces,
         PerFaceBlockAtlasEntry,
     };
@@ -38,6 +39,7 @@ use crate::block::block_registry::{
         pack::{Pack, ScriptData},
     };
     use crate::block::utils::{BlockDescriptor, BlockDestroySpeed};
+    use crate::item::utils::ItemTextureDescriptor;
 
     fn register_items(pack: &mut Pack) {
         pack.register_item_texture(ItemTexture::new(
@@ -52,7 +54,7 @@ use crate::block::block_registry::{
                     ItemDamageComponent::new(14).build(),
                     ItemDisplayNameComponent::new("Amethyst Sword\n\nThe power of refraction.")
                         .build(),
-                    ItemIconComponent::new("violin_amethyst_sword").build(),
+                    ItemIconComponent::new(ItemTextureDescriptor::new("violin_amethyst_sword")).build(),
                     ItemHandEquippedComponent::new(true).build(),
                     ItemMaxStackSizeComponent::new(1).build(),
                     ItemAllowOffHandComponent::new(true).build(),
@@ -99,7 +101,7 @@ use crate::block::block_registry::{
                     ItemDamageComponent::new(5).build(),
                     ItemDisplayNameComponent::new("Emerald Sword\n\nThe power of 'Hmm...'.")
                         .build(),
-                    ItemIconComponent::new("violin_emerald_sword").build(),
+                    ItemIconComponent::new(ItemTextureDescriptor::new("violin_emerald_sword")).build(),
                     ItemHandEquippedComponent::new(true).build(),
                     ItemMaxStackSizeComponent::new(1).build(),
                     ItemAllowOffHandComponent::new(true).build(), // ItemCustomComponentsComponent::new(

@@ -2,7 +2,7 @@ use crate::vio::{Buildable, ColorCode, Identifier, RangeDescriptor};
 use serde::{Serialize};
 use item_component_macros::item_component;
 use crate::block::utils::BlockDestroySpeed;
-use crate::item::utils::{DurabilityThreshold, EnchantableSlot, ItemRarity, ItemRepairEntry, ItemTextureDescriptor};
+use crate::item::utils::{DurabilityThreshold, EnchantableSlot, ItemAnimation, ItemRarity, ItemRepairEntry, ItemTextureDescriptor, ItemWearableSlot};
 
 pub trait ItemComponent {
     fn serialize(&self) -> String;
@@ -202,4 +202,89 @@ item_component! {
 item_component! {
     name = Rarity for "minecraft:rarity" with "transparency";
     rarity has ItemRarity for "minecraft:rarity" with "public";
+}
+
+// * Record
+
+item_component! {
+    name = Record for "minecraft:record";
+    comparator_signal has u8 for "comparator_signal";
+    duration has f64 for "duration" with "public";
+    sound_event has String for "sound_event" with "public" "into";
+}
+
+// * StorageItem
+
+item_component! {
+    name = StorageItem for "minecraft:storage_item";
+    allow_nested_storage_items has bool for "allow_nested_storage_items" with "public";
+    allowed_items has Vec<Identifier> for "allowed_items" with "public";
+    banned_items has Vec<Identifier> for "banned_items" with "public";
+    max_slots has u8 for "max_slots" with "public";
+    max_weight_limit has i32 for "max_weight_limit" with "public";
+    weight_in_storage_item has u8 for "weight_in_storage_item" with "public";
+}
+
+// * Tags
+
+item_component! {
+    name = Tags for "minecraft:tags";
+    tags has Vec<String> for "tags" with "public";
+}
+
+// * Throwable
+
+item_component! {
+    name = Throwable for "minecraft:throwable";
+    do_swing_animation has bool for "do_swing_animation" with "public";
+    launch_power_scale has f64 for "launch_power_scale" with "public";
+    max_draw_duration has f64 for "max_draw_duration" with "public";
+    max_launch_power has f64 for "max_launch_power" with "public";
+    min_draw_duration has f64 for "min_draw_duration" with "public";
+    scale_power_by_draw_duration has bool for "scale_power_by_draw_duration" with "public";
+}
+
+// * UseAnimation
+
+item_component! {
+    name = UseAnimation for "minecraft:use_animation";
+    value has ItemAnimation for "value" with "public";
+}
+
+// * UseModifiers
+
+item_component! {
+    name = UseModifiers for "minecraft:use_modifiers";
+    use_duration has f64 for "use_duration" with "public";
+    movement_modifier has f64 for "movement_modifier" with "public";
+}
+
+// * StackedByData
+
+item_component! {
+    name = StackedByData for "minecraft:stacked_by_data";
+    value has bool for "value" with "public";
+}
+
+// * ShouldDespawn
+
+item_component! {
+    name = ShouldDespawn for "minecraft:should_despawn";
+    value has bool for "value" with "public";
+}
+
+// * Wearable
+
+item_component! {
+    name = Wearable for "minecraft:wearable";
+    protection has i32 for "protection" with "public";
+    slot has ItemWearableSlot for "slot" with "public";
+}
+
+// * BlockPlacer
+
+item_component! {
+    name = BlockPlacer for "minecraft:block_placer";
+    block has Identifier for "block" with "public";
+    use_on has Vec<Identifier> for "use_on" with "public";
 }

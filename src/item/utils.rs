@@ -1,4 +1,4 @@
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, Serializer};
 use crate::vio::Identifier;
 
 #[derive(Clone, Debug)]
@@ -118,4 +118,50 @@ pub enum ItemRarity {
     Common,
     Uncommon,
     Epic
+}
+
+#[derive(Clone, Debug)]
+#[derive(Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ItemAnimation {
+    Eat,
+    Drink,
+    Bow,
+    Block,
+    Camera,
+    Crossbow,
+    None,
+    Brush,
+    Spear,
+    Spyglass
+}
+
+#[derive(Clone, Debug)]
+pub enum ItemWearableSlot {
+    WeaponOffhand,
+    ArmorHead,
+    ArmorChest,
+    ArmorLegs,
+    ArmorFeet
+}
+
+impl ItemWearableSlot {
+    pub fn str_slot(&self) -> &str {
+        match self {
+            ItemWearableSlot::WeaponOffhand => "slot.weapon.offhand",
+            ItemWearableSlot::ArmorHead => "slot.armor.head",
+            ItemWearableSlot::ArmorChest => "slot.armor.chest",
+            ItemWearableSlot::ArmorLegs => "slot.armor.legs",
+            ItemWearableSlot::ArmorFeet => "slot.armor.feet"
+        }
+    }
+}
+
+impl Serialize for ItemWearableSlot {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        serializer.serialize_str(&self.str_slot())
+    }
 }
