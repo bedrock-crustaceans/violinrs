@@ -12,3 +12,5 @@
 /denoapi/Cargo.lock
 /js-cli/target
 /item_component_macros/target
+/standalone_gen
+/block_component_macros/target

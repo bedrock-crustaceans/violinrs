@@ -1,12 +1,35 @@
 use std::path::PathBuf;
 use std::sync::Arc;
+use derive_setters::Setters;
 use serde::{Deserialize, Serialize, Serializer};
+use serde::ser::SerializeSeq;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct Vec3 {
     pub x: f64,
     pub y: f64,
     pub z: f64,
+}
+
+impl Vec3 {
+    pub fn render_as_arr(&self) -> [f64; 3] {
+        [self.x, self.y, self.z]
+    }
+}
+
+impl Serialize for Vec3 {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        let mut seq = serializer.serialize_seq(Some(3))?;
+        
+        for e in self.render_as_arr() {
+            seq.serialize_element(&e)?
+        }
+        
+        seq.end()
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -135,6 +158,26 @@ where T: Clone {
     new_vec
 }
 
+pub trait VecInto<T, E>
+where
+    T: Into<E>
+{
+    fn vec_into(&self) -> Vec<E>
+    where T: Clone;
+}
+
+impl<T, E> VecInto<T, E> for Vec<T>
+where
+    T: Into<E> + Clone,
+    E: From<T>,
+{
+    fn vec_into(&self) -> Vec<E> {
+        let new_vec = self.into_iter().map(|e| e.clone().into()).collect();
+
+        new_vec
+    }
+}
+
 #[derive(Serialize, Deserialize)]
 #[derive(Clone, Debug)]
 #[serde(transparent)]
@@ -215,4 +258,59 @@ impl ColorCode {
             ColorCode::MaterialResin => "§v",
         }
     }
+}
+
+#[derive(Clone, Copy, Debug, Setters)]
+#[setters(prefix = "using_")]
+pub struct RGBColor {
+    red: u8,
+    green: u8,
+    blue: u8,
+    preferred_serialization_way: ColorSerializationWay
+}
+
+impl RGBColor {
+    pub fn new(red: u8, green: u8, blue: u8) -> Self {
+        Self { red, green, blue, preferred_serialization_way: ColorSerializationWay::Arr }
+    }
+
+    pub fn render_as_arr(&self) -> [u8; 3] {
+        [self.red, self.green, self.blue]
+    }
+
+    pub fn render_as_hex(&self) -> String {
+        format!("#{}{}{}", Self::component_to_string(self.red), Self::component_to_string(self.green), Self::component_to_string(self.blue))
+    }
+
+    fn component_to_string(v: u8) -> String {
+        format!("{:X}", v)
+    }
+}
+
+impl Serialize for RGBColor {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        match self.preferred_serialization_way {
+            ColorSerializationWay::Hex => {
+                serializer.serialize_str(&self.render_as_hex())
+            }
+            ColorSerializationWay::Arr => {
+                let mut seq = serializer.serialize_seq(Some(self.render_as_arr().len()))?;
+
+                for item in &self.render_as_arr() {
+                    seq.serialize_element(item)?;
+                }
+
+                seq.end()
+            }
+        }
+    }
+}
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+enum ColorSerializationWay {
+    Hex,
+    Arr
 }

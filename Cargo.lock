@@ -153,6 +153,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6099cdc01846bc367c4e7dd630dc5966dccf36b652fae7a74e17b640411a91b2"
 
 [[package]]
+name = "block_component_macros"
+version = "0.1.0"
+dependencies = [
+ "mountain_sakura",
+ "proc-macro2",
+ "quote",
+ "serde",
+ "syn",
+]
+
+[[package]]
 name = "built"
 version = "0.7.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1294,6 +1305,7 @@ name = "violin_rs"
 version = "0.2.0-alpha"
 dependencies = [
  "askama",
+ "block_component_macros",
  "colored",
  "derive_setters",
  "fs_extra",

@@ -1,10 +1,9 @@
 pub mod blend_modes;
 
 use hsl::HSL;
-use image::{GenericImage, Pixel, Rgba, RgbaImage};
+use image::{Pixel, Rgba, RgbaImage};
 use std::path::PathBuf;
 use crate::image::blend_modes::{overlay_blend_mode, BlendMode};
-// use photon_rs::PhotonImage;
 
 #[derive(Clone)]
 pub struct Image {
@@ -57,9 +56,9 @@ impl Image {
     }
 
     pub fn upscaled(&self, amount: u32) -> Self {
-        let mut upscaled = self.clone();
+        let upscaled = self.clone();
 
-        let mut img = upscaled.img;
+        let img = upscaled.img;
 
         let mut buf = RgbaImage::new(
             img.width() * amount,
@@ -103,23 +102,6 @@ impl Image {
         }
     }
 }
-
-// fn photon_from_rgba_image(img: RgbaImage) -> PhotonImage {
-//     PhotonImage::new(img.as_raw().clone(), img.width(), img.height())
-// }
-// 
-// fn rgba_image_from_photon(img: PhotonImage) -> RgbaImage {
-//     RgbaImage::from_raw(img.get_width(), img.get_height(), img.get_raw_pixels()).unwrap()
-// }
-// 
-// fn compose(a: RgbaImage, b: RgbaImage, blend_mode: &str) -> RgbaImage {
-//     let mut ai = photon_from_rgba_image(a);
-//     let mut bi = photon_from_rgba_image(b);
-// 
-//     photon_rs::multiple::blend(&mut ai, &bi, blend_mode);
-// 
-//     rgba_image_from_photon(ai)
-// }
 
 fn compose_overlay(a: RgbaImage, b: RgbaImage) -> RgbaImage {
     let a_src = a;

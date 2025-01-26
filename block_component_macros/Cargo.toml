@@ -1,0 +1,14 @@
+[package]
+name = "block_component_macros"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+mountain_sakura = { path = "C:/Users/narol/RustroverProjects/mountain_sakura", version = "*" }
+syn = "2.0.96"
+quote = "1.0.38"
+proc-macro2 = "1.0.93"
+serde = { version = "1.0.217", features = ["derive"] }
