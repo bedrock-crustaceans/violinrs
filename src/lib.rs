@@ -17,9 +17,7 @@ mod tests {
         BlockRegistry, BlockTexture, Faces,
         PerFaceBlockAtlasEntry,
     };
-    use crate::block::component::{
-        BlockDisplayNameComponent, BlockFrictionComponent,
-    };
+    use crate::block::component::{BlockCollisionBoxComponent, BlockDisplayNameComponent, BlockFrictionComponent, BlockNoCollisionBoxComponent, BlockPlacementFilterComponent};
     use crate::block::state::{NumericBlockState};
     use crate::block::Block;
     use crate::image::{Image};
@@ -30,7 +28,7 @@ mod tests {
     use crate::item::item_registry::ItemTexture;
     use crate::localization::Localization;
     use crate::recipe::{FurnaceRecipe, RecipeIO, ShapedRecipe, ShapelessRecipe};
-    use crate::vio::{vec_into, Buildable, Generatable, Identifier, MolangStatement, RangeDescriptor, SemVer};
+    use crate::vio::{VecInto, Buildable, Generatable, Identifier, MolangStatement, RangeDescriptor, SemVer};
     use crate::{
         item::{
             component::{ItemDamageComponent, ItemDisplayNameComponent, ItemIconComponent},
@@ -38,7 +36,7 @@ mod tests {
         },
         pack::{Pack, ScriptData},
     };
-    use crate::block::utils::{BlockDescriptor, BlockDestroySpeed};
+    use crate::block::utils::{BlockDescriptor, BlockDestroySpeed, BlockFace, BlockPlacementCondition};
     use crate::item::utils::ItemTextureDescriptor;
 
     fn register_items(pack: &mut Pack) {
@@ -70,15 +68,15 @@ mod tests {
                         ]
                     ).build(),
                     ItemDamageAbsorptionComponent::new(
-                        vec_into(vec![
+                        vec![
                             "entity_attack"
-                        ])
+                        ].vec_into()
                     ).build(),
                     ItemDiggerComponent::new(
                         false,
                         vec![
                             BlockDestroySpeed::new(
-                                BlockDescriptor::new(
+                                BlockDescriptor::new_tags(
                                     MolangStatement::new("q.any_tag('hello_world', 'hello_violin')")
                                 ),
                                 10
@@ -233,8 +231,29 @@ mod tests {
             textures: vec![],
         };
 
-        let block = Block::new(Identifier::new("hello", "world"))
-            .using_components(vec![BlockDisplayNameComponent::new("Hello, world!").build()])
+        let block = Block::new(
+            Identifier::new("hello", "world")
+        )
+            .using_components(
+                vec![BlockDisplayNameComponent::new("Hello, world!").build(),
+                BlockCollisionBoxComponent::full().build(),
+                     BlockPlacementFilterComponent::new(
+                         vec![
+                             BlockPlacementCondition::new()
+                                 .using_allowed_faces(
+                                     vec![
+                                         BlockFace::North
+                                     ]
+                                 )
+                                 .using_block_filter(
+                                     vec![
+                                         BlockDescriptor::new_name(Identifier::new("minecraft", "dirt"))
+                                     ]
+                                 )
+                         ]
+                     ).build()
+                ]
+            )
             .using_format_version(SemVer::new(1, 21, 40));
 
         block_reg.add_block(block.clone());
@@ -242,8 +261,8 @@ mod tests {
         block.generate("./standalone_gen/block.json");
 
         // item_component! {
-        //     name = IDK for "minecraft:idk";
+        //     name = IDK for "minecraft:IDK";
         //     num has String for "num" with into;
-        // }
+        // } 
     }
 }

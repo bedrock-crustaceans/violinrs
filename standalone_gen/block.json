@@ -9,6 +9,34 @@
     "components": {
       "minecraft:display_name": {
         "value": "Hello, world!"
+      },
+      "minecraft:collision_box": {
+        "origin": [
+          -8.0,
+          0.0,
+          -8.0
+        ],
+        "size": [
+          16.0,
+          16.0,
+          16.0
+        ]
+      },
+      "minecraft:placement_filter": {
+        "conditions": [
+          {
+            "allowed_faces": [
+              "north"
+            ],
+            "block_filter": [
+              {
+                "tags": null,
+                "name": "minecraft:dirt",
+                "states": {}
+              }
+            ]
+          }
+        ]
       }
     },
     "permutations": []
