@@ -1,13 +1,12 @@
-use std::collections::HashMap;
+use crate::vio::{Identifier, MolangStatement};
 use derive_setters::Setters;
 use serde::Serialize;
-use crate::vio::{Identifier, MolangStatement};
+use std::collections::HashMap;
 
-#[derive(Clone, Debug)]
-#[derive(Serialize)]
+#[derive(Clone, Debug, Serialize)]
 pub struct BlockDestroySpeed {
     block: BlockDescriptor,
-    speed: i32
+    speed: i32,
 }
 
 impl BlockDestroySpeed {
@@ -16,25 +15,28 @@ impl BlockDestroySpeed {
     }
 }
 
-#[derive(Clone, Debug)]
-#[derive(Serialize, Setters)]
+#[derive(Clone, Debug, Serialize, Setters)]
 #[setters(prefix = "using_")]
 pub struct BlockDescriptor {
     tags: Option<MolangStatement>,
     name: Option<Identifier>,
-    states: HashMap<String, String>
+    states: HashMap<String, String>,
 }
 
 impl BlockDescriptor {
     pub fn new_tags(tags: MolangStatement) -> Self {
-        Self { tags: Some(tags), name: None, states: HashMap::new() }
+        Self {
+            tags: Some(tags),
+            name: None,
+            states: HashMap::new(),
+        }
     }
-    
+
     pub fn new_name(name: Identifier) -> Self {
         Self {
             tags: None,
             name: Some(name),
-            states: HashMap::new()
+            states: HashMap::new(),
         }
     }
 }
@@ -46,7 +48,7 @@ pub enum BlockRenderMethod {
     AlphaTestSingleSided,
     Blend,
     DoubleSided,
-    Opaque
+    Opaque,
 }
 
 #[derive(Serialize, Clone, Debug)]
@@ -57,7 +59,7 @@ pub enum BlockFace {
     South,
     West,
     Up,
-    Down
+    Down,
 }
 
 #[derive(Clone, Debug, Serialize, Setters)]
@@ -75,7 +77,7 @@ impl MaterialInstance {
             texture: texture.into(),
             render_method,
             face_dimming: true,
-            ambient_occlusion: true
+            ambient_occlusion: true,
         }
     }
 }
@@ -84,15 +86,14 @@ impl MaterialInstance {
 #[setters(prefix = "using_")]
 pub struct BlockPlacementCondition {
     allowed_faces: Vec<BlockFace>,
-    block_filter: Vec<BlockDescriptor>
+    block_filter: Vec<BlockDescriptor>,
 }
 
 impl BlockPlacementCondition {
     pub fn new() -> Self {
         Self {
             allowed_faces: Vec::new(),
-            block_filter: Vec::new()
+            block_filter: Vec::new(),
         }
     }
 }
-

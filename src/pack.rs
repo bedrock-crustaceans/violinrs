@@ -1,24 +1,26 @@
+use crate::block::block_registry::BlockTexture;
+use crate::block::block_registry::{
+    serialize_block_atlas, serialize_terrain_atlas, BlockAtlasEntry, BlockAtlasTemplate,
+    BlockRegistry, TerrainAtlasEntry, TerrainAtlasTemplate,
+};
+use crate::block::Block;
+use crate::image::Image;
 use crate::item::item_registry::{serialize_item_atlas, ItemTexture};
 use crate::item::ItemAtlasTemplate;
 use crate::item::{item_registry::ItemRegistry, Item};
+use crate::localization::Localization;
 use crate::logger::info;
 use crate::recipe::Recipe;
 use crate::template::{BpManifestTemplate, RpManifestTemplate};
+use crate::vio::SemVer;
 use askama::Template;
 use fs_extra::dir;
-use fs_extra::dir::DirEntryAttr::Path;
+use serde_json::Value;
 use std::fs;
 use std::path::PathBuf;
 use std::string::ToString;
 use std::sync::Arc;
-use serde_json::Value;
-use crate::block::block_registry::{serialize_block_atlas, serialize_terrain_atlas, BlockAtlasEntry, BlockAtlasTemplate, BlockRegistry, TerrainAtlasEntry, TerrainAtlasTemplate};
-use crate::block::Block;
-use crate::image::Image;
-use crate::block::block_registry::BlockTexture;
-use crate::vio::SemVer;
 use uuid::Uuid;
-use crate::localization::Localization;
 
 const RESULT_FOLDER: &str = "violin_output";
 
@@ -57,7 +59,7 @@ pub struct Pack {
     item_registry: ItemRegistry,
     recipes: Vec<Arc<dyn Recipe>>,
     block_registry: BlockRegistry,
-    localizations: Vec<Localization>
+    localizations: Vec<Localization>,
 }
 
 impl Pack {
@@ -94,7 +96,7 @@ impl Pack {
             item_registry: items.clone(),
             recipes: Vec::new(),
             block_registry: BlockRegistry::new(),
-            localizations: Vec::new()
+            localizations: Vec::new(),
         };
         pack
     }
@@ -115,11 +117,17 @@ impl Pack {
             "./violin_output/packs/{}/RP/manifest.json",
             &self.id
         ))
-            .unwrap_or(false) {
-            let v: Value = serde_json::from_str(fs::read_to_string(format!(
-                "./{RESULT_FOLDER}/packs/{}/RP/manifest.json",
-                &self.id
-            )).unwrap().as_str()).unwrap();
+        .unwrap_or(false)
+        {
+            let v: Value = serde_json::from_str(
+                fs::read_to_string(format!(
+                    "./{RESULT_FOLDER}/packs/{}/RP/manifest.json",
+                    &self.id
+                ))
+                .unwrap()
+                .as_str(),
+            )
+            .unwrap();
 
             rp_uuid_1 = v["header"]["uuid"].as_str().unwrap().to_string();
             rp_uuid_2 = v["modules"][0]["uuid"].as_str().unwrap().to_string();
@@ -129,21 +137,31 @@ impl Pack {
             "./{RESULT_FOLDER}/packs/{}/BP/manifest.json",
             &self.id
         ))
-            .unwrap_or(false) {
-            let v: Value = serde_json::from_str(fs::read_to_string(format!(
-                "./{RESULT_FOLDER}/packs/{}/BP/manifest.json",
-                &self.id
-            )).unwrap().as_str()).unwrap();
+        .unwrap_or(false)
+        {
+            let v: Value = serde_json::from_str(
+                fs::read_to_string(format!(
+                    "./{RESULT_FOLDER}/packs/{}/BP/manifest.json",
+                    &self.id
+                ))
+                .unwrap()
+                .as_str(),
+            )
+            .unwrap();
 
             bp_uuid_1 = v["header"]["uuid"].as_str().unwrap().to_string();
             bp_uuid_2 = v["modules"][0]["uuid"].as_str().unwrap().to_string();
             if self.scripts.is_some() {
-                bp_uuid_3 = v["modules"][1]["uuid"].as_str().unwrap_or("NULL").to_string();
+                bp_uuid_3 = v["modules"][1]["uuid"]
+                    .as_str()
+                    .unwrap_or("NULL")
+                    .to_string();
             }
         }
 
-
-        if let Ok(content) = fs::read_dir(format!("./{RESULT_FOLDER}/packs/{}/BP", &self.id)) {
+        if let Ok(
+            _
+        ) = fs::read_dir(format!("./{RESULT_FOLDER}/packs/{}/BP", &self.id)) {
             let mut files =
                 fs_extra::dir::get_dir_content(format!("./{RESULT_FOLDER}/packs/{}/BP", &self.id))
                     .unwrap();
@@ -154,7 +172,7 @@ impl Pack {
                 fs::remove_file(file).expect("Cannot remove file");
             }
         }
-        if let Ok(content) = fs::read_dir(format!("./{RESULT_FOLDER}/packs/{}/RP", &self.id)) {
+        if let Ok(_) = fs::read_dir(format!("./{RESULT_FOLDER}/packs/{}/RP", &self.id)) {
             let mut files =
                 fs_extra::dir::get_dir_content(format!("./{RESULT_FOLDER}/packs/{}/RP", &self.id))
                     .unwrap();
@@ -263,10 +281,7 @@ impl Pack {
 
     pub fn register_item_texture(&mut self, texture: ItemTexture) {
         info(
-            format!(
-                "Registering Item Texture \"{}\"",
-                texture.clone().texture_name
-            ),
+            format!("Registering Item Texture \"{}\"", texture.clone().file_name),
             "[ ITEM ][ TEXTURE ]".to_string(),
         );
         self.item_registry.add_texture(texture);
@@ -281,10 +296,11 @@ impl Pack {
             "[ BLOCK ][ TEXTURE ]".to_string(),
         );
         self.block_registry.add_texture(texture.clone());
-        self.block_registry.add_terrain_atlas_entry(TerrainAtlasEntry {
-            id: texture.id().clone().render(),
-            texture_path: format!("textures/blocks/{}.png", texture.texture_name())
-        });
+        self.block_registry
+            .add_terrain_atlas_entry(TerrainAtlasEntry {
+                id: texture.id().clone().render(),
+                texture_path: format!("textures/blocks/{}.png", texture.texture_name()),
+            });
     }
 
     pub fn register_block_atlas_entry(&mut self, entry: Arc<dyn BlockAtlasEntry>) {
@@ -351,7 +367,7 @@ impl Pack {
         .unwrap();
 
         for entry in &self.item_registry.item_atlas {
-            let file_name: String = entry.clone().texture_name;
+            let file_name: String = entry.clone().file_name;
 
             entry.src.build(PathBuf::from(format!(
                 "./{RESULT_FOLDER}/packs/{}/RP/textures/items/{}.png",
@@ -489,7 +505,9 @@ impl Pack {
 
         for texture in textures {
             texture.src().build(PathBuf::from(format!(
-                "./{RESULT_FOLDER}/packs/{}/RP/textures/blocks/{}.png", &self.id, texture.texture_name()
+                "./{RESULT_FOLDER}/packs/{}/RP/textures/blocks/{}.png",
+                &self.id,
+                texture.texture_name()
             )));
         }
     }

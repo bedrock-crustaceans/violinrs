@@ -1,9 +1,11 @@
-use serde::{Deserialize, Serialize, Serializer};
 use crate::vio::Identifier;
+use crate::vio::ViolaDefault;
+use serde::{Deserialize, Serialize, Serializer};
+use viola::ViolaDefault;
 
-#[derive(Clone, Debug)]
-#[derive(Serialize)]
+#[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "snake_case")]
+#[derive(Default)]
 pub enum EnchantableSlot {
     ArmorFeet,
     ArmorTorso,
@@ -22,15 +24,15 @@ pub enum EnchantableSlot {
     Shield,
     Shovel,
     Sword,
-    All
+    #[default]
+    All,
 }
 
-#[derive(Clone, Debug)]
-#[derive(Serialize)]
+#[derive(Clone, Debug, Serialize, Default, ViolaDefault)]
 pub struct DurabilityThreshold {
     durability: i32,
     sound_effect: Option<String>,
-    particle_type: Option<Identifier>
+    particle_type: Option<Identifier>,
 }
 
 impl DurabilityThreshold {
@@ -38,7 +40,7 @@ impl DurabilityThreshold {
         Self {
             durability,
             sound_effect: None,
-            particle_type: None
+            particle_type: None,
         }
     }
 
@@ -59,12 +61,11 @@ impl DurabilityThreshold {
     }
 }
 
-#[derive(Clone, Debug)]
-#[derive(Serialize)]
+#[derive(Clone, Debug, Serialize, Default, ViolaDefault)]
 pub struct ItemTextureDescriptor {
-    default: String,
-    dyed: Option<String>,
-    icon_trim: Option<String>
+    pub default: String,
+    pub dyed: Option<String>,
+    pub icon_trim: Option<String>,
 }
 
 impl ItemTextureDescriptor {
@@ -72,8 +73,7 @@ impl ItemTextureDescriptor {
         Self {
             default: default.into(),
             dyed: None,
-            icon_trim: None
-
+            icon_trim: None,
         }
     }
 
@@ -92,9 +92,7 @@ impl ItemTextureDescriptor {
     }
 }
 
-#[derive(Clone)]
-#[derive(Serialize, Deserialize)]
-#[derive(Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug, Default, ViolaDefault)]
 pub struct ItemRepairEntry {
     pub items: Vec<String>,
     pub repair_amount: String,
@@ -108,19 +106,20 @@ impl ItemRepairEntry {
     }
 }
 
-#[derive(Clone, Debug)]
-#[derive(Serialize)]
+#[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "snake_case")]
+#[derive(Default)]
 pub enum ItemRarity {
     Rare,
+    #[default]
     Common,
     Uncommon,
-    Epic
+    Epic,
 }
 
-#[derive(Clone, Debug)]
-#[derive(Serialize)]
+#[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "snake_case")]
+#[derive(Default)]
 pub enum ItemAnimation {
     Eat,
     Drink,
@@ -128,19 +127,21 @@ pub enum ItemAnimation {
     Block,
     Camera,
     Crossbow,
+    #[default]
     None,
     Brush,
     Spear,
-    Spyglass
+    Spyglass,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub enum ItemWearableSlot {
+    #[default]
     WeaponOffhand,
     ArmorHead,
     ArmorChest,
     ArmorLegs,
-    ArmorFeet
+    ArmorFeet,
 }
 
 impl ItemWearableSlot {
@@ -150,7 +151,7 @@ impl ItemWearableSlot {
             ItemWearableSlot::ArmorHead => "slot.armor.head",
             ItemWearableSlot::ArmorChest => "slot.armor.chest",
             ItemWearableSlot::ArmorLegs => "slot.armor.legs",
-            ItemWearableSlot::ArmorFeet => "slot.armor.feet"
+            ItemWearableSlot::ArmorFeet => "slot.armor.feet",
         }
     }
 }
@@ -158,7 +159,7 @@ impl ItemWearableSlot {
 impl Serialize for ItemWearableSlot {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
-        S: Serializer
+        S: Serializer,
     {
         serializer.serialize_str(&self.str_slot())
     }

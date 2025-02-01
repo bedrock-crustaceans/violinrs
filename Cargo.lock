@@ -1301,6 +1301,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "852e951cb7832cb45cb1169900d19760cfa39b82bc0ea9c0e5a14ae88411c98b"
 
 [[package]]
+name = "viola"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "violin_rs"
 version = "0.2.0-alpha"
 dependencies = [
@@ -1319,6 +1328,7 @@ dependencies = [
  "simplelog",
  "syn-select",
  "uuid",
+ "viola",
 ]
 
 [[package]]

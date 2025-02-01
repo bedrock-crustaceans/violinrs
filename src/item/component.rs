@@ -1,8 +1,12 @@
-use crate::vio::{Buildable, ColorCode, Identifier, RangeDescriptor};
-use serde::{Serialize};
-use item_component_macros::item_component;
 use crate::block::utils::BlockDestroySpeed;
-use crate::item::utils::{DurabilityThreshold, EnchantableSlot, ItemAnimation, ItemRarity, ItemRepairEntry, ItemTextureDescriptor, ItemWearableSlot};
+use crate::item::utils::{
+    DurabilityThreshold, EnchantableSlot, ItemAnimation, ItemRarity, ItemRepairEntry,
+    ItemTextureDescriptor, ItemWearableSlot,
+};
+use crate::vio::ViolaDefault;
+use crate::vio::{Buildable, ColorCode, Identifier, RangeDescriptor};
+use item_component_macros::item_component;
+use viola::ViolaDefault;
 
 pub trait ItemComponent {
     fn serialize(&self) -> String;
@@ -12,7 +16,7 @@ pub trait ItemComponent {
 
 item_component! {
     name = Damage for "minecraft:damage";
-    value has i32 for "value" with "public" "optional";
+    value has i32 for "value" with "public" "optional" = 10;
 }
 
 // * ItemDisplayNameComponent

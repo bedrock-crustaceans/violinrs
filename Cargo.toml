@@ -24,6 +24,7 @@ serde_json = "1.0.132"
 derive_setters = "0.1.6"
 item_component_macros = { path = "item_component_macros" }
 block_component_macros = { path = "block_component_macros" }
+viola = { path = "viola" }
 
 [dependencies.uuid]
 version = "1.7.0"

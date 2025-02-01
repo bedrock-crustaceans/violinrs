@@ -1,8 +1,8 @@
+use derive_setters::Setters;
+use serde::ser::SerializeSeq;
+use serde::{Deserialize, Serialize, Serializer};
 use std::path::PathBuf;
 use std::sync::Arc;
-use derive_setters::Setters;
-use serde::{Deserialize, Serialize, Serializer};
-use serde::ser::SerializeSeq;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Vec3 {
@@ -20,22 +20,22 @@ impl Vec3 {
 impl Serialize for Vec3 {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
-        S: Serializer
+        S: Serializer,
     {
         let mut seq = serializer.serialize_seq(Some(3))?;
-        
+
         for e in self.render_as_arr() {
             seq.serialize_element(&e)?
         }
-        
+
         seq.end()
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct Identifier {
-    namespace: String,
-    value: String,
+    pub namespace: String,
+    pub value: String,
 }
 
 impl Identifier {
@@ -48,6 +48,18 @@ impl Identifier {
             namespace: namespace.into(),
             value: value.into(),
         }
+    }
+}
+
+impl From<(String, String)> for Identifier {
+    fn from(value: (String, String)) -> Self {
+        Self::new(value.0, value.1)
+    }
+}
+
+impl From<(&str, &str)> for Identifier {
+    fn from(value: (&str, &str)) -> Self {
+        Self::new(value.0, value.1)
     }
 }
 
@@ -120,39 +132,47 @@ impl SemVer {
     }
 
     pub fn render_commas(&self) -> String {
-        format!(
-            "{}, {}, {}",
-            self.major,
-            self.minor,
-            self.patch,
-        )
+        format!("{}, {}, {}", self.major, self.minor, self.patch,)
     }
 
     pub fn current() -> Self {
         Self {
             major: 1,
             minor: 21,
-            patch: 40,
-            beta: false
+            patch: 50,
+            beta: false,
         }
     }
 }
 
-#[derive(Serialize, Deserialize)]
-#[derive(Clone, Debug)]
-pub struct RangeDescriptor<T> where T: Clone {
-    pub min: T,
-    pub max: T
+impl Default for SemVer {
+    fn default() -> Self {
+        Self::current()
+    }
 }
 
-impl<T> RangeDescriptor<T> where T: Clone {
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+pub struct RangeDescriptor<T>
+where
+    T: Clone,
+{
+    pub min: T,
+    pub max: T,
+}
+
+impl<T> RangeDescriptor<T>
+where
+    T: Clone,
+{
     pub fn new(min: T, max: T) -> Self {
         Self { min, max }
     }
 }
 
 pub fn vec_into<T>(vec: Vec<impl Into<T>>) -> Vec<T>
-where T: Clone {
+where
+    T: Clone,
+{
     let new_vec = vec.into_iter().map(|e| e.into()).collect();
 
     new_vec
@@ -160,10 +180,11 @@ where T: Clone {
 
 pub trait VecInto<T, E>
 where
-    T: Into<E>
+    T: Into<E>,
 {
     fn vec_into(&self) -> Vec<E>
-    where T: Clone;
+    where
+        T: Clone;
 }
 
 impl<T, E> VecInto<T, E> for Vec<T>
@@ -178,8 +199,7 @@ where
     }
 }
 
-#[derive(Serialize, Deserialize)]
-#[derive(Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(transparent)]
 pub struct MolangStatement(String);
 
@@ -189,10 +209,9 @@ impl MolangStatement {
     }
 }
 
-
-#[derive(Clone, Debug)]
-#[derive(Serialize)]
+#[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "snake_case")]
+#[derive(Default)]
 pub enum ColorCode {
     Black,
     DarkBlue,
@@ -209,6 +228,7 @@ pub enum ColorCode {
     Red,
     LightPurple,
     Yellow,
+    #[default]
     White,
     MinecoinGold,
     MaterialQuartz,
@@ -221,7 +241,7 @@ pub enum ColorCode {
     MaterialDiamond,
     MaterialLapis,
     MaterialAmethyst,
-    MaterialResin
+    MaterialResin,
 }
 
 impl ColorCode {
@@ -266,12 +286,17 @@ pub struct RGBColor {
     red: u8,
     green: u8,
     blue: u8,
-    preferred_serialization_way: ColorSerializationWay
+    preferred_serialization_way: ColorSerializationWay,
 }
 
 impl RGBColor {
     pub fn new(red: u8, green: u8, blue: u8) -> Self {
-        Self { red, green, blue, preferred_serialization_way: ColorSerializationWay::Arr }
+        Self {
+            red,
+            green,
+            blue,
+            preferred_serialization_way: ColorSerializationWay::Arr,
+        }
     }
 
     pub fn render_as_arr(&self) -> [u8; 3] {
@@ -279,7 +304,12 @@ impl RGBColor {
     }
 
     pub fn render_as_hex(&self) -> String {
-        format!("#{}{}{}", Self::component_to_string(self.red), Self::component_to_string(self.green), Self::component_to_string(self.blue))
+        format!(
+            "#{}{}{}",
+            Self::component_to_string(self.red),
+            Self::component_to_string(self.green),
+            Self::component_to_string(self.blue)
+        )
     }
 
     fn component_to_string(v: u8) -> String {
@@ -290,12 +320,10 @@ impl RGBColor {
 impl Serialize for RGBColor {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
-        S: Serializer
+        S: Serializer,
     {
         match self.preferred_serialization_way {
-            ColorSerializationWay::Hex => {
-                serializer.serialize_str(&self.render_as_hex())
-            }
+            ColorSerializationWay::Hex => serializer.serialize_str(&self.render_as_hex()),
             ColorSerializationWay::Arr => {
                 let mut seq = serializer.serialize_seq(Some(self.render_as_arr().len()))?;
 
@@ -312,5 +340,9 @@ impl Serialize for RGBColor {
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 enum ColorSerializationWay {
     Hex,
-    Arr
+    Arr,
+}
+
+pub trait ViolaDefault {
+    fn viola_default() -> Self;
 }

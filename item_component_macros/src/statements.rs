@@ -2,7 +2,7 @@ use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::{quote, ToTokens, TokenStreamExt};
 use std::convert::Into;
 use syn::parse::{Parse, ParseStream};
-use syn::{Token, Type};
+use syn::{Expr, Token, Type};
 
 mod keywords {
     use syn::custom_keyword;
@@ -126,7 +126,8 @@ pub(crate) struct PropertyDeclaration {
     name: Ident,
     data_type: Type,
     property_id: String,
-    modifiers: Vec<Modifier>
+    modifiers: Vec<Modifier>,
+    default: Option<Expr>
 }
 
 impl ToTokens for PropertyDeclaration {
@@ -208,6 +209,14 @@ impl ToTokens for ComponentData {
         let arg_types: Vec<Type> = props.clone().map(|x| x.data_type.clone()).collect();
         let arg_modifiers: Vec<Vec<Modifier>> = props.clone().map(|x| x.modifiers.clone()).collect();
 
+        let defaults = props.clone().filter_map(|x| {
+            if let Some(v) = x.default.clone() {
+                Some((x.name.clone(), v))
+            } else {
+                None
+            }
+        }).collect::<Vec<(Ident, Expr)>>();
+
         let new_fn = NewFun {
             types: arg_types,
             names: arg_vals,
@@ -230,11 +239,23 @@ impl ToTokens for ComponentData {
 
         let additional_derives = get_additional_derives(&self);
         
+        let mut derive_props = TokenStream::new();
+        
+        for (ident, expr) in defaults {
+            derive_props.append_all(
+                quote! {
+                    #[viola_default(#ident = #expr)]
+                }
+            )
+        }
 
         let tks: TokenStream = quote! {
             #[derive(serde::Serialize, Debug, Clone)]
             #[serde(rename = #prop_id)]
+            #[derive(ViolaDefault)]
+            #derive_props
             #additional_derives
+            #[derive(Default)]
             pub struct #name {
                 #(#props)*
             }
@@ -273,6 +294,8 @@ impl Parse for PropertyDeclaration {
 
         let mut has_modifiers = true;
 
+        let mut default: Option<Expr> = None;
+
         if input.peek(Token![;]) {
             has_modifiers = false;
         } else {
@@ -285,13 +308,19 @@ impl Parse for PropertyDeclaration {
             modifiers = parse_zero_or_more(input);
         }
 
+        if input.peek(Token![=]) {
+            _ = input.parse::<Token![=]>()?;
+            default = Some(input.parse::<Expr>()?);
+        }
+
         _ = input.parse::<Token![;]>()?;
 
         Ok(PropertyDeclaration {
             property_id: string_from_literal(param_id),
             data_type,
             name: id,
-            modifiers
+            modifiers,
+            default
         })
     }
 }

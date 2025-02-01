@@ -11,24 +11,36 @@ pub mod vio;
 
 #[cfg(test)]
 mod tests {
-    use crate::item::component::{ItemDamageAbsorptionComponent, ItemDiggerComponent, ItemDurabiltyComponent, ItemRepairableComponent};
-    use crate::item::utils::ItemRepairEntry;
     use crate::block::block_registry::{
-        BlockRegistry, BlockTexture, Faces,
-        PerFaceBlockAtlasEntry,
+        BlockRegistry, BlockTexture, Faces, PerFaceBlockAtlasEntry,
     };
-    use crate::block::component::{BlockCollisionBoxComponent, BlockDisplayNameComponent, BlockFrictionComponent, BlockNoCollisionBoxComponent, BlockPlacementFilterComponent};
-    use crate::block::state::{NumericBlockState};
+    use crate::block::component::{
+        BlockCollisionBoxComponent, BlockDisplayNameComponent, BlockFrictionComponent,
+        BlockPlacementFilterComponent,
+    };
+    use crate::block::state::NumericBlockState;
+    use crate::block::utils::{
+        BlockDescriptor, BlockDestroySpeed, BlockFace, BlockPlacementCondition,
+    };
     use crate::block::Block;
-    use crate::image::{Image};
+    use crate::image::Image;
     use crate::item::component::{
         ItemAllowOffHandComponent, ItemCustomComponentsComponent, ItemHandEquippedComponent,
         ItemMaxStackSizeComponent,
     };
+    use crate::item::component::{
+        ItemDamageAbsorptionComponent, ItemDiggerComponent, ItemDurabiltyComponent,
+        ItemRepairableComponent,
+    };
     use crate::item::item_registry::ItemTexture;
+    use crate::item::utils::ItemTextureDescriptor;
+    use crate::item::utils::{ItemRepairEntry};
     use crate::localization::Localization;
     use crate::recipe::{FurnaceRecipe, RecipeIO, ShapedRecipe, ShapelessRecipe};
-    use crate::vio::{VecInto, Buildable, Generatable, Identifier, MolangStatement, RangeDescriptor, SemVer};
+    use crate::vio::ViolaDefault;
+    use crate::vio::{
+        Buildable, Generatable, Identifier, MolangStatement, RangeDescriptor, SemVer, VecInto,
+    };
     use crate::{
         item::{
             component::{ItemDamageComponent, ItemDisplayNameComponent, ItemIconComponent},
@@ -36,8 +48,7 @@ mod tests {
         },
         pack::{Pack, ScriptData},
     };
-    use crate::block::utils::{BlockDescriptor, BlockDestroySpeed, BlockFace, BlockPlacementCondition};
-    use crate::item::utils::ItemTextureDescriptor;
+    use viola::viola;
 
     fn register_items(pack: &mut Pack) {
         pack.register_item_texture(ItemTexture::new(
@@ -52,38 +63,33 @@ mod tests {
                     ItemDamageComponent::new(14).build(),
                     ItemDisplayNameComponent::new("Amethyst Sword\n\nThe power of refraction.")
                         .build(),
-                    ItemIconComponent::new(ItemTextureDescriptor::new("violin_amethyst_sword")).build(),
+                    ItemIconComponent::new(ItemTextureDescriptor::new("violin_amethyst_sword"))
+                        .build(),
                     ItemHandEquippedComponent::new(true).build(),
                     ItemMaxStackSizeComponent::new(1).build(),
                     ItemAllowOffHandComponent::new(true).build(),
-                    ItemCustomComponentsComponent::new(vec![Identifier::new("vio", "amethyst_sword")])
-                        .build(),
-                    ItemDurabiltyComponent::new(
-                        RangeDescriptor::new(0, 1),
-                        1280
-                    ).build(),
-                    ItemRepairableComponent::new(
-                        vec![
-                            ItemRepairEntry::new(vec!["minecraft:stick"], "(1.0)")
-                        ]
-                    ).build(),
-                    ItemDamageAbsorptionComponent::new(
-                        vec![
-                            "entity_attack"
-                        ].vec_into()
-                    ).build(),
+                    ItemCustomComponentsComponent::new(vec![Identifier::new(
+                        "vio",
+                        "amethyst_sword",
+                    )])
+                    .build(),
+                    ItemDurabiltyComponent::new(RangeDescriptor::new(0, 1), 1280).build(),
+                    ItemRepairableComponent::new(vec![ItemRepairEntry::new(
+                        vec!["minecraft:stick"],
+                        "(1.0)",
+                    )])
+                    .build(),
+                    ItemDamageAbsorptionComponent::new(vec!["entity_attack"].vec_into()).build(),
                     ItemDiggerComponent::new(
                         false,
-                        vec![
-                            BlockDestroySpeed::new(
-                                BlockDescriptor::new_tags(
-                                    MolangStatement::new("q.any_tag('hello_world', 'hello_violin')")
-                                ),
-                                10
-                            )
-                        ]
-                    ).build(),
-
+                        vec![BlockDestroySpeed::new(
+                            BlockDescriptor::new_tags(MolangStatement::new(
+                                "q.any_tag('hello_world', 'hello_violin')",
+                            )),
+                            10,
+                        )],
+                    )
+                    .build(),
                 ])
                 .using_format_version(SemVer::new(1, 21, 20)),
         );
@@ -99,7 +105,8 @@ mod tests {
                     ItemDamageComponent::new(5).build(),
                     ItemDisplayNameComponent::new("Emerald Sword\n\nThe power of 'Hmm...'.")
                         .build(),
-                    ItemIconComponent::new(ItemTextureDescriptor::new("violin_emerald_sword")).build(),
+                    ItemIconComponent::new(ItemTextureDescriptor::new("violin_emerald_sword"))
+                        .build(),
                     ItemHandEquippedComponent::new(true).build(),
                     ItemMaxStackSizeComponent::new(1).build(),
                     ItemAllowOffHandComponent::new(true).build(), // ItemCustomComponentsComponent::new(
@@ -110,6 +117,31 @@ mod tests {
                 ])
                 .using_format_version(SemVer::new(1, 21, 20)),
         );
+
+        pack.register_item_texture(viola! {
+            @ItemTexture {
+                id = $"violin_new_viola_system",
+                file_name = $"violin_new_viola_system",
+                src = Image::new("./textures/viola_new_system.png")
+            }
+        });
+
+        pack.register_item(viola! {
+            @Item {
+                type_id = $("violin", "viola"),
+                format_version = @SemVer via current,
+                components = @vector [
+                    @ItemDamageComponent {
+                        value = 15
+                    }!,
+                    @ItemIconComponent {
+                        textures = @ItemTextureDescriptor {
+                            default = $"violin_new_viola_system"
+                        }
+                    }!,
+                ]
+            }
+        })
     }
 
     fn register_recipes(pack: &mut Pack) {
@@ -231,29 +263,18 @@ mod tests {
             textures: vec![],
         };
 
-        let block = Block::new(
-            Identifier::new("hello", "world")
-        )
-            .using_components(
-                vec![BlockDisplayNameComponent::new("Hello, world!").build(),
+        let block = Block::new(Identifier::new("hello", "world"))
+            .using_components(vec![
+                BlockDisplayNameComponent::new("Hello, world!").build(),
                 BlockCollisionBoxComponent::full().build(),
-                     BlockPlacementFilterComponent::new(
-                         vec![
-                             BlockPlacementCondition::new()
-                                 .using_allowed_faces(
-                                     vec![
-                                         BlockFace::North
-                                     ]
-                                 )
-                                 .using_block_filter(
-                                     vec![
-                                         BlockDescriptor::new_name(Identifier::new("minecraft", "dirt"))
-                                     ]
-                                 )
-                         ]
-                     ).build()
-                ]
-            )
+                BlockPlacementFilterComponent::new(vec![BlockPlacementCondition::new()
+                    .using_allowed_faces(vec![BlockFace::North])
+                    .using_block_filter(vec![BlockDescriptor::new_name(Identifier::new(
+                        "minecraft",
+                        "dirt",
+                    ))])])
+                .build(),
+            ])
             .using_format_version(SemVer::new(1, 21, 40));
 
         block_reg.add_block(block.clone());
@@ -263,6 +284,7 @@ mod tests {
         // item_component! {
         //     name = IDK for "minecraft:IDK";
         //     num has String for "num" with into;
-        // } 
+        // }
+
     }
 }

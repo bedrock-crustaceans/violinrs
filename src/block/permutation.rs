@@ -17,7 +17,6 @@ impl BlockPermutation {
     }
 }
 
-
 #[derive(Template)]
 #[template(path = "block_serialization/permutation.json.jinja2", escape = "none")]
 struct BlockPermutationTemplate {

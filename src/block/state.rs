@@ -41,9 +41,7 @@ impl Buildable for NumericBlockState {}
 
 impl NumericBlockState {
     pub fn new(id: Identifier, values: Vec<i32>) -> Self {
-        Self {
-            id, values
-        }
+        Self { id, values }
     }
 }
 
@@ -107,11 +105,7 @@ impl Buildable for RangedBlockState {}
 
 impl RangedBlockState {
     pub fn new(id: Identifier, min: i32, max: i32) -> Self {
-        Self {
-            id,
-            min,
-            max
-        }
+        Self { id, min, max }
     }
 }
 

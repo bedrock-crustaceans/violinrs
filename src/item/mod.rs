@@ -1,18 +1,21 @@
+use crate::vio::ViolaDefault;
 use std::sync::Arc;
 
 use crate::vio::{Identifier, SemVer};
 use askama::Template;
+use viola::ViolaDefault;
 
 pub mod component;
 pub mod item_registry;
 pub mod utils;
 
-#[derive(Clone)]
+#[derive(Clone, Default, ViolaDefault)]
 pub struct Item {
-    type_id: Identifier,
-    format_version: SemVer,
-    components: Vec<Arc<dyn component::ItemComponent>>,
+    pub(crate) type_id: Identifier,
+    pub format_version: SemVer,
+    pub components: Vec<Arc<dyn component::ItemComponent>>,
 }
+
 impl Item {
     pub fn serialize(&self) -> String {
         let components = self.components.clone();

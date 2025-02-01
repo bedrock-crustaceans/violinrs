@@ -1,6 +1,8 @@
 use super::Item;
 use crate::image::Image;
+use crate::vio::ViolaDefault;
 use askama::Template;
+use viola::ViolaDefault;
 
 #[derive(Clone)]
 pub struct ItemRegistry {
@@ -18,16 +20,16 @@ struct ItemAtlasEntryTemplate {
     pub texture_path: String,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default, ViolaDefault)]
 pub struct ItemTexture {
     pub id: String,
     pub src: Image,
-    pub texture_name: String,
+    pub file_name: String,
 }
 impl ItemTexture {
     fn serialize(&self) -> String {
         ItemAtlasEntryTemplate {
-            texture_path: format!("textures/items/{}", self.clone().texture_name),
+            texture_path: format!("textures/items/{}", self.clone().file_name),
             id: self
                 .clone()
                 .id
@@ -42,7 +44,7 @@ impl ItemTexture {
     pub fn new(id: impl Into<String>, file_name: impl Into<String>, src: Image) -> Self {
         Self {
             id: id.into(),
-            texture_name: file_name.into(),
+            file_name: file_name.into(),
             src,
         }
     }

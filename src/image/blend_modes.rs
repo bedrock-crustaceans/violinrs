@@ -1,6 +1,6 @@
 #[derive(Clone)]
 pub enum BlendMode {
-    Overlay
+    Overlay,
 }
 
 fn lerp(a: f64, b: f64, t: f64) -> f64 {
@@ -14,8 +14,7 @@ pub fn overlay_blend_mode(a: f64, b: f64, b_a: f64) -> f64 {
         1.0 - 2.0 * (1.0 - a) * (1.0 - b)
     };
 
-    println!("a: {}, b: {}, res: {}", a, b,
-             lerp(a, result, b_a));
+    println!("a: {}, b: {}, res: {}", a, b, lerp(a, result, b_a));
 
     lerp(a, result, b_a)
 }

@@ -1,17 +1,17 @@
+use super::Block;
+use crate::image::Image;
+use crate::vio::{Buildable, Generatable, Identifier};
+use askama::Template;
 use std::fs;
 use std::path::PathBuf;
 use std::sync::Arc;
-use askama::Template;
-use crate::image::Image;
-use crate::vio::{Buildable, Generatable, Identifier};
-use super::Block;
 
 #[derive(Clone)]
 pub struct BlockRegistry {
     pub blocks: Vec<Block>,
     pub block_atlas: Vec<Arc<dyn BlockAtlasEntry>>,
     pub terrain_atlas: Vec<TerrainAtlasEntry>,
-    pub textures: Vec<BlockTexture>
+    pub textures: Vec<BlockTexture>,
 }
 
 #[derive(Template)]
@@ -73,7 +73,9 @@ pub struct Faces {
 impl PerFaceBlockAtlasEntry {
     pub fn new(id: Identifier, textures: Faces, sound: impl Into<String>) -> Self {
         Self {
-            id, textures, sound: sound.into()
+            id,
+            textures,
+            sound: sound.into(),
         }
     }
 }
@@ -85,7 +87,7 @@ impl Faces {
         north: impl Into<String>,
         south: impl Into<String>,
         east: impl Into<String>,
-        west: impl Into<String>
+        west: impl Into<String>,
     ) -> Self {
         Self {
             up: up.into(),
@@ -93,7 +95,7 @@ impl Faces {
             north: north.into(),
             south: south.into(),
             east: east.into(),
-            west: west.into()
+            west: west.into(),
         }
     }
 
@@ -103,7 +105,7 @@ impl Faces {
         north: Identifier,
         south: Identifier,
         east: Identifier,
-        west: Identifier
+        west: Identifier,
     ) -> Self {
         Self {
             up: up.render(),
@@ -111,7 +113,7 @@ impl Faces {
             north: north.render(),
             south: south.render(),
             east: east.render(),
-            west: west.render()
+            west: west.render(),
         }
     }
 }
@@ -126,8 +128,10 @@ impl BlockAtlasEntry for PerFaceBlockAtlasEntry {
             north: self.textures.north.clone(),
             south: self.textures.south.clone(),
             east: self.textures.east.clone(),
-            west: self.textures.west.clone()
-        }.render().unwrap()
+            west: self.textures.west.clone(),
+        }
+        .render()
+        .unwrap()
     }
 
     fn id(&self) -> Identifier {
@@ -154,12 +158,12 @@ struct PerFaceBlockAtlasEntryTemplate {
 impl AllBlockAtlasEntry {
     pub fn new(id: Identifier, textures: impl Into<String>, sound: impl Into<String>) -> Self {
         Self {
-            id, textures: textures.into(), sound: sound.into()
+            id,
+            textures: textures.into(),
+            sound: sound.into(),
         }
     }
 }
-
-
 
 #[derive(Clone)]
 pub struct TerrainAtlasEntry {
@@ -229,7 +233,7 @@ impl BlockRegistry {
             blocks: vec![],
             block_atlas: vec![],
             terrain_atlas: vec![],
-            textures: vec![]
+            textures: vec![],
         }
     }
 
@@ -264,12 +268,12 @@ impl BlockRegistry {
     pub fn add_block_atlas_entry(&mut self, entry: Arc<dyn BlockAtlasEntry>) {
         self.block_atlas.push(entry.clone());
     }
-    
+
     pub fn unified_add_texture(&mut self, texture: BlockTexture) {
         self.add_texture(texture.clone());
         self.add_terrain_atlas_entry(TerrainAtlasEntry {
             id: texture.id().clone().render(),
-            texture_path: format!("textures/blocks/{}.png", texture.texture_name())
+            texture_path: format!("textures/blocks/{}.png", texture.texture_name()),
         });
     }
 }
@@ -278,13 +282,15 @@ impl BlockRegistry {
 pub struct BlockTexture {
     src: Image,
     id: Identifier,
-    file_name: String
+    file_name: String,
 }
 
 impl BlockTexture {
     pub fn new(src: Image, id: Identifier, file_name: impl Into<String>) -> Self {
         Self {
-            src, id, file_name: file_name.into()
+            src,
+            id,
+            file_name: file_name.into(),
         }
     }
 

@@ -1,8 +1,7 @@
-use std::collections::HashMap;
-use askama::Template;
-use block_component_macros::block_component;
 use crate::block::utils::{BlockFace, BlockPlacementCondition, MaterialInstance};
-use crate::vio::{Buildable, Identifier, MolangStatement, Pair, RGBColor, RangeDescriptor, Vec3};
+use crate::vio::{Buildable, Identifier, MolangStatement, RGBColor, Vec3};
+use block_component_macros::block_component;
+use std::collections::HashMap;
 
 pub trait BlockComponent {
     fn serialize(&self) -> String;
@@ -38,7 +37,7 @@ impl BlockCollisionBoxComponent {
             },
         }
     }
-    
+
     pub fn disabled() -> BlockNoCollisionBoxComponent {
         BlockNoCollisionBoxComponent::new(false)
     }
@@ -90,7 +89,7 @@ block_component! {
 impl BlockDestructibleByMiningComponent {
     pub fn instant_mine() -> Self {
         Self {
-            seconds_to_destroy: 0.0
+            seconds_to_destroy: 0.0,
         }
     }
 

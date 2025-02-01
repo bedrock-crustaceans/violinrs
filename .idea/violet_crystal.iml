@@ -8,10 +8,12 @@
       <sourceFolder url="file://$MODULE_DIR$/item_component_macros/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/block_component_macros/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/block_component_macros/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/viola/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/js-cli/target" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
       <excludeFolder url="file://$MODULE_DIR$/item_component_macros/target" />
       <excludeFolder url="file://$MODULE_DIR$/block_component_macros/target" />
+      <excludeFolder url="file://$MODULE_DIR$/viola/target" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

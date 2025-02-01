@@ -1,12 +1,12 @@
-use std::fs;
-use std::path::PathBuf;
 use self::component::BlockComponent;
 use crate::block::permutation::BlockPermutation;
 use crate::block::state::BlockState;
 use crate::vio::{Generatable, Identifier, SemVer};
 use askama::Template;
-use std::sync::Arc;
 use jsonxf::pretty_print;
+use std::fs;
+use std::path::PathBuf;
+use std::sync::Arc;
 
 pub mod block_registry;
 pub mod component;
@@ -55,12 +55,11 @@ impl Block {
             traits: "".to_string(),
             states,
             permutations,
-            format_version: self.format_version.render()
+            format_version: self.format_version.render(),
         }
         .render()
         .unwrap()
     }
-
 
     pub fn new(type_id: Identifier) -> Self {
         Self {
@@ -68,7 +67,7 @@ impl Block {
             states: vec![],
             permutations: vec![],
             components: vec![],
-            format_version: SemVer::current()
+            format_version: SemVer::current(),
         }
     }
 
@@ -119,5 +118,5 @@ struct BlockTemplate {
     traits: String,
     permutations: String,
     states: String,
-    format_version: String
+    format_version: String,
 }

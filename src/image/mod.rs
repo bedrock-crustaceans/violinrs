@@ -1,15 +1,25 @@
 pub mod blend_modes;
 
+use crate::image::blend_modes::{overlay_blend_mode, BlendMode};
 use hsl::HSL;
 use image::{Pixel, Rgba, RgbaImage};
 use std::path::PathBuf;
-use crate::image::blend_modes::{overlay_blend_mode, BlendMode};
 
 #[derive(Clone)]
 pub struct Image {
     source: PathBuf,
     hue_shift: f64,
     img: RgbaImage,
+}
+
+impl Default for Image {
+    fn default() -> Self {
+        Self {
+            source: PathBuf::from(""),
+            hue_shift: 0.0,
+            img: RgbaImage::new(16, 16),
+        }
+    }
 }
 
 impl Image {
@@ -60,19 +70,12 @@ impl Image {
 
         let img = upscaled.img;
 
-        let mut buf = RgbaImage::new(
-            img.width() * amount,
-            img.height() * amount,
-        );
+        let mut buf = RgbaImage::new(img.width() * amount, img.height() * amount);
 
         for (ox, oy, color) in img.enumerate_pixels() {
             for y in 0..amount {
                 for x in 0..amount {
-                    buf.put_pixel(
-                        ox * amount + x,
-                        oy * amount + y,
-                        color.clone()
-                    );
+                    buf.put_pixel(ox * amount + x, oy * amount + y, color.clone());
                 }
             }
         }
@@ -89,9 +92,7 @@ impl Image {
 
         for _ in 0..options.repeats {
             match blend_mode {
-                BlendMode::Overlay => {
-                    new_src = compose_overlay(new_src, other.img.clone())
-                }
+                BlendMode::Overlay => new_src = compose_overlay(new_src, other.img.clone()),
             };
         }
 
@@ -110,10 +111,27 @@ fn compose_overlay(a: RgbaImage, b: RgbaImage) -> RgbaImage {
     let mut result_src = RgbaImage::new(a_src.width(), a_src.height());
 
     for (x, y, color) in result_src.enumerate_pixels_mut() {
-        let a_channels: Vec<f64> = a_src.get_pixel(x, y).clone().channels().iter().map(|x| x.clone() as f64 / 255.0).collect();
-        let b_channels: Vec<f64> = b_src.get_pixel(x, y).clone().channels().iter().map(|x| x.clone() as f64 / 255.0).collect();
-        let mut ar = a_channels[0]; let mut ag = a_channels[1]; let mut ab = a_channels[2]; let aa = a_channels[3];
-        let br = b_channels[0]; let bg = b_channels[1]; /*let bb = b_channels[2];*/ let ba = b_channels[3];
+        let a_channels: Vec<f64> = a_src
+            .get_pixel(x, y)
+            .clone()
+            .channels()
+            .iter()
+            .map(|x| x.clone() as f64 / 255.0)
+            .collect();
+        let b_channels: Vec<f64> = b_src
+            .get_pixel(x, y)
+            .clone()
+            .channels()
+            .iter()
+            .map(|x| x.clone() as f64 / 255.0)
+            .collect();
+        let mut ar = a_channels[0];
+        let mut ag = a_channels[1];
+        let mut ab = a_channels[2];
+        let aa = a_channels[3];
+        let br = b_channels[0];
+        let bg = b_channels[1]; /*let bb = b_channels[2];*/
+        let ba = b_channels[3];
         // let [mut br, mut bg, mut bb, mut ba]: [&f64] = b_src.get_pixel(x, y).clone().channels().iter().map(|x| x.clone() as f64 / 255.0).collect() else {
         //     unreachable!()
         // };
@@ -122,7 +140,12 @@ fn compose_overlay(a: RgbaImage, b: RgbaImage) -> RgbaImage {
         ag = overlay_blend_mode(ag, bg, ba);
         ab = overlay_blend_mode(ab, bg, ba);
 
-        *color = Rgba([(ar * 255.0) as u8, (ag * 255.0) as u8, (ab * 255.0) as u8, (aa * 255.0) as u8]);
+        *color = Rgba([
+            (ar * 255.0) as u8,
+            (ag * 255.0) as u8,
+            (ab * 255.0) as u8,
+            (aa * 255.0) as u8,
+        ]);
     }
 
     result_src
@@ -130,22 +153,17 @@ fn compose_overlay(a: RgbaImage, b: RgbaImage) -> RgbaImage {
 
 #[derive(Clone, Debug)]
 pub struct ComposeOptions {
-    pub repeats: u8
+    pub repeats: u8,
 }
 
 impl Default for ComposeOptions {
     fn default() -> Self {
-        Self {
-            repeats: 1
-        }
+        Self { repeats: 1 }
     }
 }
 
 impl ComposeOptions {
     pub fn using_repeats(self, repeats: u8) -> Self {
-        Self {
-            repeats,
-            ..self
-        }
+        Self { repeats, ..self }
     }
 }
