@@ -9,6 +9,8 @@ pub mod recipe;
 pub mod template;
 pub mod vio;
 
+pub use viola::viola;
+
 #[cfg(test)]
 mod tests {
     use crate::block::block_registry::{
