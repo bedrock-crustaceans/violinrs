@@ -11,7 +11,7 @@ pub mod utils;
 
 #[derive(Clone, Default, ViolaDefault)]
 pub struct Item {
-    pub(crate) type_id: Identifier,
+    pub type_id: Identifier,
     pub format_version: SemVer,
     pub components: Vec<Arc<dyn component::ItemComponent>>,
 }

@@ -8,11 +8,14 @@ pub mod pack;
 pub mod recipe;
 pub mod template;
 pub mod vio;
+pub mod script;
+pub mod vio_vanilla;
 
 pub use viola::viola;
 
 #[cfg(test)]
 mod tests {
+    // use std::collections::HashMap;
     use crate::block::block_registry::{
         BlockRegistry, BlockTexture, Faces, PerFaceBlockAtlasEntry,
     };
@@ -48,9 +51,11 @@ mod tests {
             component::{ItemDamageComponent, ItemDisplayNameComponent, ItemIconComponent},
             Item,
         },
-        pack::{Pack, ScriptData},
+        pack::Pack,
+        script::ScriptData
     };
     use viola::viola;
+    use crate::vio_vanilla::script_additions::{CustomCommand, CustomCommandArg};
 
     fn register_items(pack: &mut Pack) {
         pack.register_item_texture(ItemTexture::new(
@@ -187,6 +192,25 @@ mod tests {
 
     #[test]
     fn main() {
+        let mut scripts = ScriptData::new(
+            SemVer::new(1, 14, 0),
+            SemVer::new(1, 3, 0),
+            r"./src-scripts",
+        ).unwrap();
+
+        scripts.additions.push(
+            CustomCommand {
+                prefix: String::from("!"),
+                name: String::from("run"),
+                args: vec![
+                    CustomCommandArg::Num,
+                    CustomCommandArg::Num,
+                    CustomCommandArg::Num
+                ],
+                path: String::from("./commands/basic_command.js")
+            }.build()
+        );
+
         let mut pack = Pack::new(
             "Light-Elytra Booster",
             "light-elytra-booster",
@@ -195,14 +219,10 @@ mod tests {
             "Official add-on made using Violin.rs",
             r"C:\Users\narol\AppData\Local\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\development_behavior_packs", // Developer BP Folder
             r"C:\Users\narol\AppData\Local\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\development_resource_packs", // Developer RP Folder
-            Image::new(r"./textures/diamond_sword.png")
+            Image::new(r".\textures\diamond_sword.png")
                 .with_hue_shift(120.0)
                 .upscaled(16),
-            ScriptData::new(
-                SemVer::new(1, 14, 0),
-                SemVer::new(1, 3, 0),
-                r"./src-scripts",
-            ),
+            Some(scripts)
         );
 
         register_items(&mut pack);
@@ -251,6 +271,15 @@ mod tests {
 
         en_us.add_block_name(Identifier::new("violin", "test"), "Violin Test");
         pack.add_localization(en_us);
+        
+        // pack.add_localization(viola! {
+        //     Localization {
+        //         language = $"en_US",
+        //         item_names = HashMap::from([
+        //
+        //         ])
+        //     }
+        // });
 
         pack.generate();
         pack.build_to_dev();

@@ -5,12 +5,14 @@ use syn::{braced, bracketed, Expr, Token};
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 
-mod punct {
+mod kw_punct {
     use syn::{custom_keyword, custom_punctuation};
 
     custom_punctuation!(DollarInto, $>);
     custom_keyword!(vector);
     custom_keyword!(via);
+    custom_keyword!(map);
+    custom_keyword!(to);
 }
 
 pub struct Declaration {
@@ -21,7 +23,8 @@ pub struct Declaration {
 pub(crate) enum ViolaDeclaration {
     Struct(Declaration, Punctuated<Property, Token![,]>),
     Vector(Vec<ViolaDeclaration>),
-    ViaStmt(Declaration, Ident)
+    ViaStmt(Declaration, Ident),
+    Map(Vec<Property>)
 }
 
 pub struct Prop {
@@ -37,8 +40,8 @@ enum Property {
 
 impl Parse for ViolaDeclaration {
     fn parse(input: ParseStream) -> syn::Result<Self> {
-        if input.peek(punct::vector) {
-            input.parse::<punct::vector>()?;
+        if input.peek(kw_punct::vector) {
+            input.parse::<kw_punct::vector>()?;
             
             let content;
             bracketed!(content in input);
@@ -48,12 +51,23 @@ impl Parse for ViolaDeclaration {
             Ok(Self::Vector(
                 pnct.into_iter().collect(),
             ))
-        } else if input.peek2(punct::via) {
+        } else if input.peek(kw_punct::map) {
+            input.parse::<kw_punct::map>()?;
+            
+            let content;
+            braced!(content in input);
+            
+            let pnct: Punctuated<Property, Token![,]> = content.parse_terminated(Property::parse, Token![,])?;
+
+            Ok(Self::Map(
+                pnct.into_iter().collect(),
+            ))
+        } else if input.peek2(kw_punct::via) {
             let mut should_build = false;
             
             let struct_ident = input.parse::<Ident>()?;
             
-            input.parse::<punct::via>()?;
+            input.parse::<kw_punct::via>()?;
             
             let fn_ident = input.parse::<Ident>()?;
             
@@ -164,6 +178,11 @@ impl ToTokens for ViolaDeclaration {
                 tokens.append_all(quote! {
                     #struct_ident::#fn_ident()#maybe_build
                 })
+            },
+            ViolaDeclaration::Map(_) => { 
+                // quote! {
+                //     HashMap
+                // }
             }
         }
     }

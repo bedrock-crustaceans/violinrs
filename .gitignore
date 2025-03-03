@@ -5,6 +5,8 @@
 /violin_output
 /textures
 /node_modules
+/package-lock.json
+/package.json
 /Cargo.lock
 /denoapi/.vscode
 /denoapi/target
@@ -15,4 +17,5 @@
 /standalone_gen
 /block_component_macros/target
 /viola/target
-/wiolin
+/commands
+/templates/scripts/command_setup.js

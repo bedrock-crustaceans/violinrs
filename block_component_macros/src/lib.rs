@@ -1,7 +1,6 @@
 mod statements;
 
 use proc_macro::{TokenStream};
-use proc_macro2::{Ident, Span};
 use quote::quote;
 use syn::parse_macro_input;
 use crate::statements::{ComponentData};
@@ -15,8 +14,7 @@ fn get_source(call_site: Option<String>) -> String {
 
 #[proc_macro]
 pub fn block_component(input: TokenStream) -> TokenStream {
-    let span = Span::call_site();
-    dbg!("Parse start");
+    // let span = Span::call_site();
 
     let res = parse_macro_input!(input as ComponentData);
 
@@ -25,7 +23,7 @@ pub fn block_component(input: TokenStream) -> TokenStream {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    // use super::*;
 
     #[test]
     fn it_works() {

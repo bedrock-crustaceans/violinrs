@@ -1311,7 +1311,7 @@ dependencies = [
 
 [[package]]
 name = "violin_rs"
-version = "0.2.0-alpha"
+version = "0.3.0-alpha"
 dependencies = [
  "askama",
  "block_component_macros",
@@ -1323,6 +1323,7 @@ dependencies = [
  "item_component_macros",
  "jsonxf",
  "log",
+ "regex",
  "serde",
  "serde_json",
  "simplelog",

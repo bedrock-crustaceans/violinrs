@@ -1,14 +1,18 @@
+use crate::vio::ViolaDefault;
 use crate::vio::Identifier;
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
+use viola::ViolaDefault;
 
 #[derive(Clone)]
+#[derive(ViolaDefault)]
+#[derive(Default)]
 pub struct Localization {
-    language: String,
-    item_names: HashMap<String, String>,
-    block_names: HashMap<String, String>,
-    customs: HashMap<String, String>,
+    pub language: String,
+    pub item_names: HashMap<String, String>,
+    pub block_names: HashMap<String, String>,
+    pub customs: HashMap<String, String>,
 }
 
 impl Localization {

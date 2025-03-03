@@ -16,33 +16,21 @@ use crate::vio::SemVer;
 use askama::Template;
 use fs_extra::dir;
 use serde_json::Value;
-use std::fs;
+use std::{fs, io};
 use std::path::PathBuf;
 use std::string::ToString;
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
+use regex::RegexBuilder;
 use uuid::Uuid;
+use crate::script::ScriptData;
 
 const RESULT_FOLDER: &str = "violin_output";
 
 #[derive(Clone)]
-pub struct ScriptData {
-    pub mc_server_version: SemVer,
-    pub mc_server_ui_version: SemVer,
-    pub paired_scripts_folder: String,
-}
-
-impl ScriptData {
-    pub fn new(
-        mc_server_version: SemVer,
-        mc_server_ui_version: SemVer,
-        paired_scripts_folder: impl Into<String>,
-    ) -> Option<Self> {
-        Some(Self {
-            mc_server_version,
-            mc_server_ui_version,
-            paired_scripts_folder: paired_scripts_folder.into(),
-        })
-    }
+#[derive(PartialEq, Eq)]
+pub enum PackPart {
+    BP,
+    RP
 }
 
 #[derive(Clone)]
@@ -255,6 +243,7 @@ impl Pack {
 
         if self.scripts.is_some() {
             self.pair_scripts();
+            self.generate_script_additions();
         }
 
         self.generate_items();
@@ -571,5 +560,45 @@ impl Pack {
 
     pub fn add_localization(&mut self, localization: Localization) {
         self.localizations.push(localization)
+    }
+
+    pub fn write_file(&self, pack_part: PackPart, path: impl Into<String>, contents: String) {
+        let path = format!("./{RESULT_FOLDER}/packs/{}/{}/{}",
+                           &self.id,
+                           match pack_part {
+                               PackPart::BP => "BP",
+                               PackPart::RP => "RP"
+                           },
+                           path.into(),
+        );
+
+        _ = fs::create_dir_all(RegexBuilder::new("[^/]+$")
+            .build().unwrap().replace(&path, "").to_string());
+
+        fs::write(
+            path,
+            contents,
+        ).unwrap();
+    }
+
+    pub fn read_file(&self, pack_part: PackPart, path: impl Into<String>) -> io::Result<String> {
+        fs::read_to_string(
+            format!("./{RESULT_FOLDER}/packs/{}/{}/{}",
+                    &self.id,
+                    match pack_part {
+                        PackPart::BP => "BP",
+                        PackPart::RP => "RP"
+                    },
+                    path.into(),
+            )
+        )
+    }
+
+    pub fn generate_script_additions(&self) {
+        let scripts = self.scripts.clone().unwrap().clone();
+        let self_r = Arc::new(RwLock::new(&self));
+        // &self.scripts.unwrap().generate_additions();
+        
+        scripts.generate_additions(self_r);
     }
 }

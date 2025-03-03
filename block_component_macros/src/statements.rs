@@ -155,10 +155,8 @@ impl Parse for ComponentData {
         _ = input.parse::<keywords::name>()?; // name
         _ = input.parse::<Token![=]>()?; // equals sign
         let ident = Ident::parse(input)?; // the name itself
-        dbg!(&ident);
         _ = input.parse::<Token![for]>()?; // for
         let param_id = Literal::parse(input)?;
-        dbg!(&param_id);
 
         let mut has_modifiers = true;
         let mut modifiers: Vec<Modifier> = Vec::new();
@@ -269,7 +267,6 @@ impl Parse for PropertyDeclaration {
         let data_type = Type::parse(input)?;
         _ = input.parse::<Token![for]>()?;
         let param_id = Literal::parse(input)?;
-        dbg!(&param_id);
 
         let mut has_modifiers = true;
 

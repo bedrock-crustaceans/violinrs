@@ -1,6 +1,6 @@
 [package]
 name = "violin_rs"
-version = "0.2.0-alpha"
+version = "0.3.0-alpha"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 description = "Rust-powered addon development framework for Minecraft Bedrock"
@@ -25,6 +25,7 @@ derive_setters = "0.1.6"
 item_component_macros = { path = "item_component_macros" }
 block_component_macros = { path = "block_component_macros" }
 viola = { path = "viola" }
+regex = "1.11.1"
 
 [dependencies.uuid]
 version = "1.7.0"

@@ -1,0 +1,94 @@
+import * as mc from "@minecraft/server";
+import { on } from "{{path}}";
+
+const prefix = "{{prefix}}";
+
+/**
+ * @param {string} c
+ * @returns {boolean}
+ */
+function isNumeric(c) {
+    return c.toUpperCase() === c.toLowerCase();
+}
+
+/**
+ * @arg {string} code
+ * @returns {any[]}
+ * */
+function parseArgs(code) {
+    const args = [];
+    const src = code.split("");
+    let makingString = false;
+    let makingStringNoQuotes = false;
+    let tempStr = "";
+
+    while (src.length !== 0) {
+        let curr = src.shift();
+
+        if (curr === " " || curr === undefined || src.length === 0) {
+            if (makingStringNoQuotes) {
+                args.push(tempStr);
+                makingString = false;
+                tempStr = "";
+                makingStringNoQuotes = false;
+            }
+            continue;
+        }
+
+        if (curr === '"') {
+            if (makingString) {
+                args.push(tempStr);
+                makingString = false;
+                tempStr = "";
+            } else {
+                makingString = !makingString;
+                tempStr = "";
+            }
+            continue;
+        }
+
+        if (!isNumeric(curr)) {
+            makingString = true;
+            makingStringNoQuotes = true;
+        }
+
+        if (makingString) {
+            tempStr = tempStr + curr;
+            continue;
+        }
+
+        if (isNumeric(curr)) {
+            let numStr = "";
+            while (curr != undefined && isNumeric(curr) && curr != " ") {
+                numStr = numStr + curr;
+                curr = src.shift();
+            }
+            args.push(parseFloat(numStr));
+        }
+    }
+
+    return args;
+}
+
+mc.world.beforeEvents.chatSend.subscribe((event) => {
+    let { sender, message } = event;
+
+    if (message.startsWith(prefix)) {
+        event.cancel = true;
+
+        message = message.replace(prefix, "");
+
+        const types = {{ argtypes }};
+
+        const args = parseArgs(message);
+
+        for (let i = 0; i < args.length; i++) {
+            if (typeof args[i] !== types[i]) {
+                sender.sendMessage(`§cExpected argument of type ${types[i]} at index ${i + 1}`)
+                return;
+            }
+        }
+
+        on(sender, {{args}});
+    }
+})
